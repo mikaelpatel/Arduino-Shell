@@ -25,12 +25,10 @@ And with full instruction names.
 ````
 This encodes the forth statement (with mock arduino functions).
 ````
- 13 pinModeOutput
+ 13 output
  begin
-   13 digitalWriteHigh
-   1000 delayMillis
-   13 digitalWriteLow
-   1000 delayMillis
+   13 high 1000 delay
+   13 low  1000 delay
  repeat
 ````
 A further compressed version (shorter):
@@ -126,3 +124,92 @@ if-else "e". Blocks may be nested.
 
 Comments "(...)" are allowed in scripts, and may be nested. They are
 ignored when the script is executed.
+
+## Example Scripts
+
+### Blink
+
+Turn board LED, pin 13, on/off with 1000 ms period.
+
+````
+13 output
+{
+  13 high 1000 delay
+  13 low 1000 delay
+  true
+} while
+````
+Script:
+````
+13O{13H1000D13L1000DT}w
+````
+
+### Termostat
+
+Read analog pin 0, turn board LED on if value [100..200] else off.
+````
+13 output
+{
+  0 analogRead
+  dup 100 < swap 200 > or not
+  13 digitalWrite
+  true
+} while
+````
+Script:
+````
+13O{0Ad100<s200>|~13WT}w
+````
+
+### Blink with on/off button
+
+Turn board LED, pin 13, on/off with 1000 ms period if pin 2 is low.
+````
+2 inputPullup
+13 output
+{
+  2 digitalRead not
+  13 digitalWrite
+  true
+} while
+````
+Script:
+````
+2U13O{2R~13WT}w
+````
+
+### Factorial function
+````
+: fac ( n -- n! )
+  1 swap
+  {
+    dup 0>
+      { swap over * swap 1- true }
+      { drop false }
+    ifelse
+  } while ;
+5 fac .
+````
+Script:
+````
+5,1s{d0>{so*s1-T}{uF}e}w.
+````
+
+### Range check [low..high].
+````
+: within ( x low high -- bool )
+  rot swap over swap > swap rot < or not ;
+10 5 100 within .
+-10 5 100 within .
+110 5 100 within .
+````
+Script:
+````
+10,5,100rsos>sr<|~.
+-10,5,100rsos>sr<|~.
+110,5,100rsos>sr<|~.
+````
+
+
+
+
