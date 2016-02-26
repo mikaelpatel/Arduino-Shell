@@ -5,6 +5,8 @@ sketches. The shell uses a byte token threaded instruction set. The
 tokens, characters, are chosen so that it is possible to write small
 scripts directly. A token compiler is not required.
 
+![screenshot](https://dl.dropboxusercontent.com/u/993383/Cosa/screenshots/Screenshot%20from%202016-02-26%2015%3A15%3A48.png)
+
 The classical blink sketch in the shell script language is
 ````
  13O{13H1000D13L1000DT}w
