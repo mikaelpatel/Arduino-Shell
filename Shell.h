@@ -444,9 +444,12 @@ public:
 
       // Check for special form
       if (c == '{') {
+	int n = 1;
 	push(s);
-	while ((c = *s++) != 0)
-	  if (c == '}') break;
+	while ((n != 0) && ((c = *s++) != 0)) {
+	  if (c == '{') n++;
+	  else if (c == '}') n--;
+	}
 	if (c == 0) {
 	  c = '{';
 	  break;
