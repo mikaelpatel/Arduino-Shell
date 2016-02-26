@@ -207,7 +207,6 @@ public:
     switch (op) {
     case ' ': // -- | no operation
     case ',':
-    case ';':
       break;
     case '~': // x -- ~x | complement
       tos(~tos());

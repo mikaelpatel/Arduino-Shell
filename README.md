@@ -56,7 +56,6 @@ Opcode | Parameters | Description
 --------|------------|------------
 \0 | -- | exit script
 , | -- | no operation
-; | -- | no operation
 ( | -- | comment start
 ) | -- | comment end
 { | -- block | block start
@@ -96,7 +95,6 @@ D | ms -- | delay
 F | -- 0 | false
 H | pin -- | digitalWrite(pin, HIGH)
 I | pin -- | pinMode(pin, INPUT)
-U | pin -- | pinMode(pin, INPUT_PULLUP)
 L | pin -- | digitalWrite(pin, LOW)
 M | -- ms | millis()
 N | -- | no operation
@@ -104,6 +102,7 @@ O | pin -- | pinMode(pin, OUTPUT)
 P | value pin -- | analogWrite(pin, value)
 R | pin --  value | digitalRead(pin)
 T | -- -1 | true
+U | pin -- | pinMode(pin, INPUT_PULLUP)
 W | value pin -- | digitalWrite(pin, value)
 
 ## Special forms
