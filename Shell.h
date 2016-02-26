@@ -208,7 +208,7 @@ public:
     case ' ': // -- | no operation
     case ',':
       break;
-    case '~': // x -- ~x | complement
+    case '~': // x -- ~x | bitwise not
       tos(~tos());
       break;
     case '@': // addr -- val | read variable
@@ -226,43 +226,43 @@ public:
       val = pop();
       tos(tos() == val ? -1 : 0);
       break;
-    case '<': // x y -- x<y | and
+    case '<': // x y -- x<y | less than
       val = pop();
       tos(tos() < val ? -1 : 0);
       break;
-    case '>': // x y -- x>y | and
+    case '>': // x y -- x>y | greater than
       val = pop();
       tos(tos() > val ? -1 : 0);
       break;
-    case '&': // x y -- x&y | and
+    case '&': // x y -- x&y | bitwise and
       val = pop();
       tos(tos() & val);
       break;
-    case '|': // x y -- x|y | or
+    case '|': // x y -- x|y | bitwise or
       val = pop();
       tos(tos() | val);
       break;
-    case '^': // x y -- x^y | xor
+    case '^': // x y -- x^y | bitwise xor
       val = pop();
       tos(tos() ^ val);
       break;
-    case '+': // x y -- x+y | add
+    case '+': // x y -- x+y | addition
       val = pop();
       tos(tos() + val);
       break;
-    case '-': // x y -- x-y | subtract
+    case '-': // x y -- x-y | subtraction
       val = pop();
       push(pop() - val);
       break;
-    case '*': // x y -- x*y | multiply
+    case '*': // x y -- x*y | multiplication
       val = pop();
       tos(tos() * val);
       break;
-    case '/': // x y -- x/y | divide
+    case '/': // x y -- x/y | division
       val = pop();
       tos(tos() / val);
       break;
-    case '%': // x y -- x%y | remainder
+    case '%': // x y -- x%y | modulo
       val = pop();
       push(pop() % val);
       break;

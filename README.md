@@ -60,20 +60,20 @@ Opcode | Parameters | Description
 ) | -- | comment end
 { | -- block | block start
 } | -- | block end
-~ | x -- ~x | one's complement
+~ | x -- ~x | bitwise not
 @ | addr -- val | read variable
 ! | val addr -- | write variable
 # | x y -- x!=y | not equal
 = | x y -- x==y | equal
 < | x y -- x<y | less than
 > | x y -- x>y | greater than
-& | x y -- x&y | and
-^ | x y -- x^y | xor
-+ | x y -- x+y | add
-- | x y -- x-y | subtract
-* | x y -- x*y | multiply
-/ | x y -- x/y | divide
-% | x y -- x%y | remainder
+& | x y -- x&y | bitwise and
+^ | x y -- x^y | bitwise xor
++ | x y -- x+y | addition
+- | x y -- x-y | subtraction
+* | x y -- x*y | multiplication
+/ | x y -- x/y | division
+% | x y -- x%y | modulo
 . | x -- | print
 c | xn ... x1 -- | clear
 d | x -- x x | duplicate
