@@ -169,13 +169,16 @@ Turn board LED, pin 13, on/off with 1000 ms period if pin 2 is low.
 13 output
 {
   2 digitalRead not
-  13 digitalWrite
+  {
+    13 high 1000 delay
+    13 low 1000 delay
+  } if
   true
 } while
 ````
 Script:
 ````
-2U13O{2R~13WT}w
+2U13O{2R~{13H1000D13L1000D}iT}w
 ````
 
 ### Factorial function
