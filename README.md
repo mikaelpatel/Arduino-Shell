@@ -102,12 +102,22 @@ W | value pin -- | digitalWrite(pin, value)
 
 ## Special forms
 
-The shell script language allows the following special forms. First,
-integer numbers may be used directly in scripts. When the script is
+The shell script language allows several special forms:
+
+### Literal Numbers
+
+Integer numbers may be used directly in scripts. When the script is
 executed the value of the number is pushed on the parameter stack.
 
-Second, blocks "{...}". They begin with left curley bracket and end
+### Blocks
+
+Code blocks "{...}". They begin with left curley bracket and end
 with a right curley bracket. When the script is executed the address
 of the block is pushed on the parameter stack and can be used with
 operation code; execute "x", loop "l", while "w", if-true "i", and
 if-else "e". Blocks may be nested.
+
+### Comments
+
+Comments "(...)" are allowed in scripts, and may be nested. They are
+ignored when the script is executed.
