@@ -7,6 +7,10 @@ scripts directly. A token compiler is not required.
 
 ![screenshot](https://dl.dropboxusercontent.com/u/993383/Cosa/screenshots/Screenshot%20from%202016-02-26%2015%3A15%3A48.png)
 
+The shell has trace built-in. It will display the execution of the
+script with current script address, opcode, stack depth and
+contents (see serial monitor above in screenshot).
+
 The classical blink sketch in the shell script language is
 ````
  13O{13H1000D13L1000DT}w
