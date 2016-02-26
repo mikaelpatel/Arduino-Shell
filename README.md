@@ -13,14 +13,18 @@ And with some extra spacing to make the operations easier to read.
 ````
  13 O { 13 H 1000 D 13 L 1000 D T } w
 ````
+And with full instruction names.
+````
+ 13 Output { 13 High 1000 Delay 13 Low 1000 Delay True } while
+````
 This encodes the forth statement (with mock arduino functions).
 ````
  13 pinModeOutput
  begin
    13 digitalWriteHigh
-   1000 delay
+   1000 delayMillis
    13 digitalWriteLow
-   1000 delay
+   1000 delayMillis
  repeat
 ````
 A further compressed version (shorter):
