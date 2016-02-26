@@ -23,8 +23,10 @@
  * Script Shell with stack machine instruction set. Instructions are
  * printable characters so that command lines and scripts can be
  * written directly.
+ * @param[in] STACK_MAX max stack depth.
+ * @param[in] VAR_MAX max number of variables.
  */
-template<int STACK_MAX>
+template<int STACK_MAX, int VAR_MAX>
 class Shell {
 public:
   /**
@@ -36,7 +38,9 @@ public:
     m_tos(0),
     m_trace(false),
     m_ios(ios)
-  {}
+  {
+    memset(m_var, 0, sizeof(m_var));
+  }
 
   /**
    * Set trace to given flag.
@@ -122,6 +126,38 @@ public:
   }
 
   /**
+   * Read variable.
+   * @param[in] addr address.
+   * @return value.
+   */
+  int read(int addr)
+  {
+    if (addr < 0 || addr >= VAR_MAX) return (0);
+    return (m_var[addr]);
+  }
+
+  /**
+   * Write variable.
+   * @param[in] addr address.
+   * @param[in] val value.
+   */
+  void write(int addr, int val)
+  {
+    if (addr < 0 || addr >= VAR_MAX) return;
+    m_var[addr] = val;
+  }
+
+  /**
+   * Write variable.
+   * @param[in] addr address.
+   * @param[in] s script.
+   */
+  void write(int addr, const char* s)
+  {
+    write(addr, (int) s);
+  }
+
+  /**
    * Print parameter stack contents.
    */
   void print()
@@ -167,7 +203,7 @@ public:
   bool execute(char op)
   {
     const char* script;
-    int pin, val, n;
+    int pin, addr, val, n;
     switch (op) {
     case ' ': // -- | no operation
     case ',':
@@ -175,6 +211,13 @@ public:
       break;
     case '~': // x -- ~x | complement
       tos(~tos());
+      break;
+    case '@': // addr -- val | read variable
+      tos(read(tos()));
+      break;
+    case '!': // val addr -- | write variable
+      addr = pop();
+      write(addr, pop());
       break;
     case '#': // x y -- x!=y | not equal
       val = pop();
@@ -220,7 +263,7 @@ public:
       val = pop();
       tos(tos() / val);
       break;
-    case '%': // x y -- x%y | reminder
+    case '%': // x y -- x%y | remainder
       val = pop();
       push(pop() % val);
       break;
@@ -432,6 +475,7 @@ public:
 
 protected:
   int m_stack[STACK_MAX];
+  int m_var[VAR_MAX];
   int* m_sp;
   int m_tos;
   bool m_trace;

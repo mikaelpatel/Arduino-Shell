@@ -23,8 +23,8 @@
 
 #include <Shell.h>
 
-// Shell with 16 integer depth stack and serial output stream
-Shell<16> shell(Serial);
+// Shell 16 depth stack and 16 variables
+Shell<16,16> shell(Serial);
 
 // Configure; demo variants
 #define SCRIPT_DEMO
@@ -42,15 +42,15 @@ void setup()
   // : fun ( pin -- )
   //   1000 swap over over high delay low delay ;
   const char* fun = "1000sooHDLD";
+  shell.write(0,fun);
 
-  // : fie ( pin fn -- )
-  //   over output over over execute over over execute execute ;
-  const char* fie = "oOooxooxx";
+  // : fie ( pin -- )
+  //   dup output 0 @ over over execute over over execute execute ;
+  const char* fie = "oO0@ooxooxx";
 
   // 13 ' fun fie
   shell.trace(true);
   shell.push(13);
-  shell.push(fun);
   shell.execute(fie);
 
   // : fum ( pin -- )

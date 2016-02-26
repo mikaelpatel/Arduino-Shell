@@ -9,19 +9,27 @@ The classical blink sketch in the shell script language is
 ````
  13O{13H1000D13L1000DT}w
 ````
-And with some extra spacing
+And with some extra spacing to make the operations easier to read.
 ````
  13 O { 13 H 1000 D 13 L 1000 D T } w
 ````
-This encodes the forth statement
+This encodes the forth statement (with mock arduino functions).
 ````
- 13 OUTPUT pinMode
+ 13 pinModeOutput
  begin
-   13 HIGH digitalWrite
+   13 digitalWriteHigh
    1000 delay
-   13 LOW digitalWrite
+   13 digitalWriteLow
    1000 delay
  repeat
+````
+A further compressed version (shorter):
+````
+ 13O{1000,13ooHDLDT}w
+````
+And a faster version:
+````
+ 13O1000,13{ooHDooLDT}w
 ````
 
 ## Install
@@ -38,7 +46,9 @@ Opcode | Parameters | Description
 --------|------------|------------
 , | -- | no operation
 ; | -- | no operation
-~ | x -- ~x | complement
+~ | x -- ~x | one's complement
+@ | addr -- val | read variable
+! | val addr -- | write variable
 # | x y -- x!=y | not equal
 = | x y -- x==y | equal
 < | x y -- x<y | less than
@@ -49,7 +59,7 @@ Opcode | Parameters | Description
 - | x y -- x-y | subtract
 * | x y -- x*y | multiply
 / | x y -- x/y | divide
-% | x y -- x%y | reminder
+% | x y -- x%y | remainder
 . | x -- | print
 c | xn ... x1 -- | clear
 d | x -- x x | duplicate
