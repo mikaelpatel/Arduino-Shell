@@ -1,5 +1,5 @@
 /**
- * @file ShellScript.ino
+ * @file ShellBlink.ino
  * @version 1.0
  *
  * @section License
@@ -17,55 +17,34 @@
  *
  * @section Description
  * This Arduino sketch shows how to use the Shell library to
- * execute scripts.
+ * implement the classical blink sketch as a script.
  */
 
 #include <Shell.h>
 
-// Shell 16 depth stack and 16 variables
 Shell<16,16> shell(Serial);
 
 void setup()
 {
   Serial.begin(57600);
   while (!Serial);
-  Serial.println(F("ShellScript: started"));
-
-  // Turn on trace
+  Serial.println(F("ShellBlink: started"));
   shell.trace(true);
-
-  // : blinks ( n ms pin -- )
-  //   dup output
-  //   rot { dup high over delay dup low over delay } loop
-  //   drop drop ;
-  const char* blinks = "dOr{dHoDdLoD}luu";
-
-  Serial.println(F("5 1000 13 blinks"));
-  shell.push(5);
-  shell.push(1000);
-  shell.push(13);
-  shell.execute(blinks);
-
-  // Turn off trace
-  shell.trace(false);
-
-  // : monitor ( buttonPin ledPin -- )
-  //   over inputPullup
-  //   dup output
-  //   {
-  //      over digitalRead
-  //      { 1000 } { 200 } ifElse
-  //      over high dup delay over low delay
-  //      true
-  //   } while ;
-  const char* monitor = "oUdO{oR{1000}{200}eoHdDoLDT}w";
-
-  Serial.println(F("2 13 monitor"));
-  shell.push(2);
-  shell.push(13);
-  shell.execute(monitor);
 }
 
 void loop()
 {
+  // : blink ( ms pin -- )
+  //   dup output
+  //   {
+  //      dup high over delay
+  //      dup low over delay
+  //      true
+  //    } while ;
+  const char* blink = "dO{dHoDdLoDT}w";
+
+  Serial.println(F("1000 13 blink"));
+  shell.push(1000);
+  shell.push(13);
+  shell.execute(blink);
 }
