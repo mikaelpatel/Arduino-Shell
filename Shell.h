@@ -442,16 +442,26 @@ public:
 	print();
       }
 
-      // Check for special form
+      // Check for special forms
+      char left = 0, right;
       if (c == '{') {
-	int n = 1;
+	left = '{';
+	right = '}';
 	push(s);
+      }
+      else if (c == '(') {
+	left = '(';
+	right = ')';
+      }
+      if (left) {
+	int n = 1;
 	while ((n != 0) && ((c = *s++) != 0)) {
-	  if (c == '{') n++;
-	  else if (c == '}') n--;
+	  if (c == left) n++;
+	  else if (c == right) n--;
 	}
 	if (c == 0) {
-	  c = '{';
+	  s -= 1;
+	  c = left;
 	  break;
 	}
 	continue;
@@ -469,7 +479,7 @@ public:
       m_ios.print(t);
       for (int i = 0, n = s - t - 1; i < n; i++)
 	m_ios.print(' ');
-      m_ios.println(F("^- illegal command"));
+      m_ios.println(F("^--?"));
     }
 
     // Return error position

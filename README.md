@@ -51,6 +51,8 @@ Opcode | Parameters | Description
 \0 | -- | exit script
 , | -- | no operation
 ; | -- | no operation
+( | -- | comment start
+) | -- | comment end
 { | -- block | block start
 } | -- | block end
 ~ | x -- ~x | one's complement
