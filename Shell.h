@@ -368,7 +368,7 @@ public:
       analogWrite(pin, pop());
       break;
     case 'R': // pin -- value | digitalRead(pin)
-      tos(digitalRead(tos()));
+      tos(digitalRead(tos()) ? -1 : 0);
       break;
     case 'T': // -- -1 | true
       push(-1);
