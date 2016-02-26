@@ -48,8 +48,11 @@ File>Examples menu.
 
 Opcode | Parameters | Description
 --------|------------|------------
+\0 | -- | exit script
 , | -- | no operation
 ; | -- | no operation
+{ | -- block | block start
+} | -- | block end
 ~ | x -- ~x | one's complement
 @ | addr -- val | read variable
 ! | val addr -- | write variable
@@ -69,7 +72,7 @@ c | xn ... x1 -- | clear
 d | x -- x x | duplicate
 e | flag if-block else-block -- | execute block on flag
 i | flag block -- | execute block if flag is true
-l | n block(i -- ) -- | execute block n-times
+l | n block -- | execute block n-times
 n | x -- -x | negate
 o | x y -- x y x | over
 p | xn ... x1 n -- xn ... x1 xn | pick
@@ -78,7 +81,7 @@ s | x y -- y x | swap
 t | -- | toggle trace mode
 u | x -- | drop
 w | block( -- flag) -- | execute block while flag is true
-x | script -- | execute
+x | script/block -- | execute script or block
 z | -- | print stack contents
 A | pin -- sample | analogRead(pin)
 D | ms -- | delay
