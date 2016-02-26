@@ -29,7 +29,7 @@ A further compressed version (shorter):
 ````
 And a faster version:
 ````
- 13O1000,13{ooHDooLDT}w
+ 1000,13dO{ooHDooLDT}w
 ````
 
 ## Install
@@ -101,4 +101,4 @@ Second, blocks "{...}". They begin with left curley bracket and end
 with a right curley bracket. When the script is executed the address
 of the block is pushed on the parameter stack and can be used with
 operation code; execute "x", loop "l", while "w", if-true "i", and
-if-else "e".
+if-else "e". Blocks may be nested.
