@@ -9,7 +9,7 @@ scripts directly. A token compiler is not required.
 
 The shell has trace built-in. It will display the execution of the
 script with current script address, opcode, stack depth and
-contents (see serial monitor above in screenshot).
+contents). Typical output in the Serial Monitor above.
 
 The classical blink sketch in the shell script language is
 ````
