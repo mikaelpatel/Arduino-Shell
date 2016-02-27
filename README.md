@@ -110,16 +110,36 @@ W | value pin -- | digitalWrite(pin, value)
 
 ## Special forms
 
-The shell script language allows several special forms:
+The shell script language allows several special forms and instructions.
+
+### Boolean
+
+Boolean values are true(-1) and false(0). Mapping to boolean may be
+done with testing non-zero (0#). Boolean value can be directly
+combined with bitwise operations.
+
+The instructions to push the boolean values are _T_ and _F_.
 
 ### Literal Numbers
 
 Integer numbers may be used directly in scripts. When the script is
 executed the value of the number is pushed on the parameter stack.
 
+The statement;
+````
+print((3 + (-5)) * 6)
+````
+may be written as the following script expression:
+````
+3 -5 + 6 * .
+````
+and compressed to:
+````
+3,-5+6*.
+````
 ### Blocks
 
-Code blocks have the following form "{...}". They begin with left
+Code blocks have the following form _{...}_. They begin with left
 curley bracket and end with a right curley bracket. When the script is
 executed the address of the block is pushed on the parameter stack.
 
@@ -129,20 +149,21 @@ Control structures follow the same format at PostScript. They are also
 Reversed Polish Notation. The block or blocks are push on the stack
 before the control structure instruction. Below are the difference
 control structure with full instruction names.
+````
+bool { if-block } if
+bool { if-block } { else-block } ifelse
 
-    bool { if-block } if
-    bool { if-block } { else-block } ifelse
+n { loop-block } loop
 
-    n { loop-block } loop
-
-    { while-block bool } while
-
-The instructions are abbreviated i,e,l and w.
+{ while-block bool } while
+````
+The instructions are _i_,_e_,_l_ and _w_.
 
 ### Output Strings
 
-Output strings have the following form "(string)". When executed the
-string within the parenthesis is written to the output stream.
+Output strings have the following form _(...)_. When executed the
+string within the parenthesis is written to the output stream. The
+instruction _m_ will print a new-line (corresponds to forth cr).
 
 ## Example Scripts
 
@@ -161,6 +182,21 @@ Turn board LED, pin 13, on/off with 1000 ms period.
 Script:
 ````
 13O{13H1000D13L1000DT}w
+````
+
+### Analog Pins
+
+Read analog pins and print value.
+
+The below example samples the analog pins and prints the value with
+the prefix string "An=".
+````
+0 5 { ." A" dup . ." =" dup analogRead . cr 1+ } loop drop
+
+````
+Script:
+````
+0,5{(A)d.(=)dA.m1+}lu
 ````
 
 ### Termostat
