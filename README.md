@@ -70,16 +70,17 @@ Opcode | Parameters | Description | Forth
 / | x y -- x/y | division | /
 % | x y -- x%y | modulo | MOD
 . | x -- | print number followed by one space | .
-c | xn ... x1 -- | clear | ABORT
+c | xn..x1 -- | clear | ABORT
 d | x -- x x | duplicate | DUP
 e | flag if-block else-block -- | execute block on flag | IF ELSE THEN
 i | flag block -- | execute block if flag is true | IF THEN
+j | xn..x1 -- xn..x1 n | stack depth
 k | -- [char true] or false | non-blocking read character from input stream |
 l | n block -- | execute block n-times | DO LOOP
 m | -- | write new line to output stream | CR
 n | x -- -x | negate | NEGATE
 o | x y -- x y x | over | OVER
-p | xn ... x1 n -- xn ... x1 xn | pick | PICK
+p | xn..x1 n -- xn..x1 xn | pick | PICK
 q | x -- [x x] or 0 | duplicate if not zero | ?DUP
 r | x y z --- y z x | rotate | ROT
 s | x y -- y x | swap | SWAP

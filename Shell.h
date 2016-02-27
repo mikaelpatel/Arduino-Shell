@@ -268,7 +268,7 @@ public:
       m_ios.print(pop());
       m_ios.print(' ');
       break;
-    case 'c': // xn ... x1 -- | clear
+    case 'c': // xn..x1 -- | clear
       clear();
       break;
     case 'd': // x -- x x | duplicate
@@ -290,6 +290,9 @@ public:
     case 'i': // flag block -- | execute block if flag is true
       script = (const char*) pop();
       if (pop() && execute(script) != NULL) return (false);
+      break;
+    case 'j': // xn..x1 -- xn..x1 n | stack depth
+      push(depth());
       break;
     case 'k': // -- [char true] or false | non-blocking read from input stream
       val = m_ios.read();
@@ -315,7 +318,7 @@ public:
     case 'o': // x y -- x y x | over
       push(*m_sp);
       break;
-    case 'p': // xn ... x1 n -- xn ... x1 xn | pick
+    case 'p': // xn..x1 n -- xn..x1 xn | pick
       tos(*(m_sp - tos() + 1));
       break;
     case 'q': // x -- [x x] or 0 | duplicate if not zero
