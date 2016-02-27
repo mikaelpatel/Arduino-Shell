@@ -53,12 +53,7 @@ File>Examples menu.
 
 Opcode | Parameters | Description
 --------|------------|------------
-\0 | -- | exit script
 , | -- | no operation
-( | -- | output string start
-) | -- | output string end
-{ | -- block | block start
-} | -- | block end
 ~ | x -- ~x | bitwise not
 @ | addr -- val | read variable
 ! | val addr -- | write variable
