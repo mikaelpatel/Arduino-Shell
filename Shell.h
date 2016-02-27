@@ -452,15 +452,15 @@ public:
       }
 
       // Check for literal numbers
-      if ((c >= '0' && c <= '9') || ((base > 10) && c >= 'a' && c <= 'f')) {
+      if (is_digit(c, base)) {
 	int val = 0;
 	do {
-	  if (base > 10 && c >= 'a')
+	  if (base == 16 && c >= 'a')
 	    val = (val * base) + (c - 'a') + 10;
 	  else
 	    val = (val * base) + (c - '0');
 	  c = *s++;
-	} while ((c >= '0' && c <= '9') || ((base > 10) && c >= 'a' && c <= 'f'));
+	} while (is_digit(c, base));
 	if (neg) {
 	  val = -val;
 	  neg = false;
@@ -593,6 +593,22 @@ protected:
   {
     return (val ? -1 : 0);
   }
+
+  /**
+   * Check that the given character is a digit in the given base.
+   * @param[in] c character.
+   * @param[in] base must be 2, 8, 10 or 16.
+   * @return bool.
+   */
+  bool is_digit(char c, int base)
+  {
+    if (base == 2)
+      return (c >= '0' && c <= '1');
+    if (base == 16 && c >= 'a')
+      return (c >= 'a' && c <= 'f');
+    return (c >= '0' && c <= '9');
+  }
+
 };
 
 #endif
