@@ -73,7 +73,7 @@ Opcode | Parameters | Description
 * | x y -- x*y | multiplication
 / | x y -- x/y | division
 % | x y -- x%y | modulo
-. | x -- | print
+. | x -- | print number followed by one space
 c | xn ... x1 -- | clear
 d | x -- x x | duplicate
 e | flag if-block else-block -- | execute block on flag
@@ -195,7 +195,7 @@ the prefix string "An=".
 ````
 Script:
 ````
-0,5{(A)d.(=)dA.m1+}lu
+0,5{(A)d.(= )dA.m1+}lu
 ````
 
 ### Termostat

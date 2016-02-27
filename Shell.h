@@ -266,8 +266,9 @@ public:
       val = pop();
       push(pop() % val);
       break;
-    case '.': // x -- | print
+    case '.': // x -- | print number followed by one space
       m_ios.print(pop());
+      m_ios.print(' ');
       break;
     case 'c': // xn ... x1 -- | clear
       clear();
