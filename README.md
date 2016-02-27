@@ -13,33 +13,33 @@ script with current script address, opcode, stack depth and
 contents). Typical output in the Serial Monitor above.
 
 The classical blink sketch in the shell script language is
-````
+```
  13O{13H1000D13L1000DT}w
-````
+```
 And with some extra spacing to make the operations easier to read.
-````
+```
  13 O { 13 H 1000 D 13 L 1000 D T } w
-````
+```
 And with full instruction names.
-````
+```
  13 Output { 13 High 1000 Delay 13 Low 1000 Delay True } while
-````
+```
 This encodes the forth statement (with mock arduino functions).
-````
+```
  13 output
  begin
    13 high 1000 delay
    13 low  1000 delay
  repeat
-````
+```
 A further compressed version (shorter):
-````
+```
  13O{1000,13ooHDLDT}w
-````
+```
 And a faster version:
-````
+```
  1000,13dO{ooHDooLDT}w
-````
+```
 
 ## Install
 
@@ -75,12 +75,12 @@ d | x -- x x | duplicate | DUP
 e | flag if-block else-block -- | execute block on flag | IF ELSE THEN
 i | flag block -- | execute block if flag is true | IF THEN
 k | -- [char -1] or 0 | non-blocking read character from input stream |
-l | n block -- | execute block n-times | FOR LOOP
+l | n block -- | execute block n-times | DO LOOP
 m | -- | write new line to output stream | CR
 n | x -- -x | negate | NEGATE
 o | x y -- x y x | over | OVER
 p | xn ... x1 n -- xn ... x1 xn | pick | PICK
-q | x -- x x or 0 | duplicate if not zero | ?DUP
+q | x -- [x x] or 0 | duplicate if not zero | ?DUP
 r | x y z --- y z x | rotate | ROT
 s | x y -- y x | swap | SWAP
 t | -- | toggle trace mode |
@@ -92,7 +92,7 @@ y | -- | yield for multi-tasking scheduler |
 z | -- | print stack contents | .S
 A | pin -- sample | analogRead(pin) |
 D | ms -- | delay |
-F | -- 0 | false |
+F | -- 0 | false | 0
 H | pin -- | digitalWrite(pin, HIGH) |
 I | pin -- | pinMode(pin, INPUT) |
 K | -- char | blocking read character from input stream  | KEY
@@ -102,7 +102,7 @@ N | -- | no operation |
 O | pin -- | pinMode(pin, OUTPUT) |
 P | value pin -- | analogWrite(pin, value) |
 R | pin --  value | digitalRead(pin) |
-T | -- -1 | true |
+T | -- -1 | true | -1
 U | pin -- | pinMode(pin, INPUT_PULLUP) |
 W | value pin -- | digitalWrite(pin, value) |
 
