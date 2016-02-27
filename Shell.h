@@ -267,7 +267,7 @@ public:
       push(pop() % val);
       break;
     case '.': // x -- | print
-      m_ios.println(pop());
+      m_ios.print(pop());
       break;
     case 'c': // xn ... x1 -- | clear
       clear();
