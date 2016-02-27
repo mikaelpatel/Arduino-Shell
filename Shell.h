@@ -36,6 +36,7 @@ public:
   Shell(Stream& ios) :
     m_sp(m_stack - 1),
     m_tos(0),
+    m_marker(-1),
     m_trace(false),
     m_ios(ios)
   {
@@ -293,8 +294,13 @@ public:
       script = (const char*) pop();
       if (pop() && execute(script) != NULL) return (false);
       break;
-    case 'k': // -- char or -1 | read from input stream
-      push(m_ios.read());
+    case 'k': // -- [char -1] or 0 | non-blocking read from input stream
+      val = m_ios.read();
+      if (val < 0) push(0);
+      else {
+	push(val);
+	push(-1);
+      }
       break;
     case 'l': // n block -- | execute block n-times
       script = (const char*) pop();
@@ -347,6 +353,9 @@ public:
       script = (const char*) pop();
       if (execute(script) != NULL) return (false);
       break;
+    case 'y': // -- | yield
+      yield();
+      break;
     case 'z': // -- | print stack contents
       print();
       break;
@@ -364,6 +373,10 @@ public:
       break;
     case 'I': // pin -- | pinMode(pin, INPUT)
       pinMode(pop(), INPUT);
+      break;
+    case 'K': // -- char | blocking read from input stream
+      while ((val = m_ios.read()) < 0) yield();
+      push(val);
       break;
     case 'L': // pin -- | digitalWrite(pin, LOW)
       digitalWrite(pop(), LOW);
@@ -457,13 +470,20 @@ public:
       // Check for special forms; code blocks, and output strings
       char left = 0, right;
       if (c == '{') {
-	left = '{';
-	right = '}';
+	left = '{'; right = '}';
 	push(s);
       }
       else if (c == '(') {
-	left = '(';
-	right = ')';
+	left = '('; right = ')';
+      }
+      else if (c == '[' && m_marker == -1) {
+	m_marker = depth();
+	continue;
+      }
+      else if (c == ']' && m_marker != -1) {
+	push(depth() - m_marker);
+	m_marker = -1;
+	continue;
       }
       if (left) {
 	int n = 1;
@@ -504,6 +524,7 @@ protected:
   int m_var[VAR_MAX];
   int* m_sp;
   int m_tos;
+  int m_marker;
   bool m_trace;
   Stream& m_ios;
 };
