@@ -488,6 +488,14 @@ public:
       case ' ': // -- | no operation
       case ',':
 	continue;
+      case '$': // -- | trap
+	c = *s;
+	if (c != 0 && trap(c)) {
+	  s += 1;
+	  continue;
+	}
+	c = '$';
+	break;
       case '\'': // -- char | push character
 	c = *s;
 	if (c != 0) {
@@ -554,6 +562,18 @@ public:
     // Return error position
     return (s - 1);
   }
+
+  /**
+   * Execute given extened operation code (character). Return true if
+   * successful otherwise false.
+   * @param[in] op operation code.
+   * @return bool.
+   */
+  virtual bool trap(char op)
+  {
+    return (op != 0);
+  }
+
 
 protected:
   int m_stack[STACK_MAX];

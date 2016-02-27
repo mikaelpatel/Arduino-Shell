@@ -1,14 +1,14 @@
 # Arduino-Shell
 
 This library provides a forth style shell for Arduino
-sketches. The shell uses a byte token threaded instruction set. The
+sketches. Shell uses a byte token threaded instruction set. The
 tokens, characters, are chosen so that it is possible to write small
 scripts directly. A token compiler is not required. As forth scripts
 are in Reverse Polish Notation (RPN).
 
 ![screenshot](https://dl.dropboxusercontent.com/u/993383/Cosa/screenshots/Screenshot%20from%202016-02-26%2015%3A15%3A48.png)
 
-The shell has trace built-in. It will display the execution of the
+Shell has trace built-in. It will display the execution of the
 script with current script address, opcode, stack depth and
 contents). Typical output in the Serial Monitor above.
 
@@ -182,7 +182,7 @@ The shell is constructed with a stack and a variable table. The size
 of the stack (STACK_MAX) and variable table (VAR_MAX) are given as
 template parameters.
 ```
-42,0 !
+42,0!
 0@
 ```
 The instructions to read and write a variable uses an address/index
@@ -198,6 +198,12 @@ These can then be called from a script:
 ```
 0@x
 ```
+
+### Extended Instructions
+
+Shell allows application extension with a virtual member function,
+trap(op). The function is called when character `$` is encounted, with
+the succeeding character as operation code.
 
 ## Example Scripts
 
