@@ -206,9 +206,6 @@ public:
     const char* script;
     int pin, addr, val, n;
     switch (op) {
-    case ' ': // -- | no operation
-    case ',':
-      break;
     case '~': // x -- ~x | bitwise not
       tos(~tos());
       break;
@@ -415,7 +412,7 @@ public:
   /**
    * Execute given script (null terminated sequence of operation
    * codes). Return NULL if successful otherwise script reference that
-   * failed. Print error position in trace mode.
+   * failed. Prints error position in trace mode.
    * @param[in] s script.
    * @return bool.
    */
@@ -467,24 +464,44 @@ public:
 	print();
       }
 
-      // Check for special forms; code blocks, and output strings
+      // Check for special forms
       char left = 0, right;
-      if (c == '{') {
-	left = '{'; right = '}';
+      switch (c) {
+      case ' ': // -- | no operation
+      case ',':
+	continue;
+      case '\'': // -- char | push character
+	c = *s;
+	if (c != 0) {
+	  push(c);
+	  s += 1;
+	}
+	continue;
+      case '{': // -- block | start code block
+	left = '{';
+	right = '}';
 	push(s);
+	break;
+      case '(': // -- | start output string
+	left = '(';
+	right = ')';
+	break;
+      case '[': // -- | start stack marker
+	if (m_marker == -1) {
+	  m_marker = depth();
+	  continue;
+	}
+	break;
+      case ']': // xn..x1 -- n | end stack marker
+	if (m_marker != -1) {
+	  push(depth() - m_marker);
+	  m_marker = -1;
+	  continue;
+	}
+      default:
+	;
       }
-      else if (c == '(') {
-	left = '('; right = ')';
-      }
-      else if (c == '[' && m_marker == -1) {
-	m_marker = depth();
-	continue;
-      }
-      else if (c == ']' && m_marker != -1) {
-	push(depth() - m_marker);
-	m_marker = -1;
-	continue;
-      }
+      // Special form to process
       if (left) {
 	int n = 1;
 	while ((n != 0) && ((c = *s++) != 0)) {
