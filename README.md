@@ -77,6 +77,7 @@ c | xn ... x1 -- | clear
 d | x -- x x | duplicate
 e | flag if-block else-block -- | execute block on flag
 i | flag block -- | execute block if flag is true
+k | -- char or -1 | read from input stream
 l | n block -- | execute block n-times
 n | x -- -x | negate
 o | x y -- x y x | over
@@ -116,9 +117,20 @@ executed the value of the number is pushed on the parameter stack.
 
 Code blocks "{...}". They begin with left curley bracket and end
 with a right curley bracket. When the script is executed the address
-of the block is pushed on the parameter stack and can be used with
-operation code; execute "x", loop "l", while "w", if-true "i", and
-if-else "e". Blocks may be nested.
+of the block is pushed on the parameter stack.
+
+### Control Structures
+
+Control structures follow the same format at PostScript. They are also
+Reversed Polish Notation. The block or blocks are push on the stack
+before the control structure instruction.
+
+    bool { if-block } *if*
+    bool { if-block } { else-block } *ifelse*
+
+    n { loop-block } *loop*
+
+    { while-block bool } *while*
 
 ### Comments
 
