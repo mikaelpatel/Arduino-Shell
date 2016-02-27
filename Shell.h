@@ -424,6 +424,7 @@ public:
   {
     const char* t = s;
     bool neg = false;
+    int base = 10;
     char c;
 
     // Execute operation code in script
@@ -431,28 +432,41 @@ public:
 
       // Check for negative numbers
       if (c == '-') {
-	c = *s++;
+	c = *s;
 	if (c < '0' || c > '9') {
 	  c = '-';
-	  s -= 1;
 	}
 	else {
 	  neg = true;
+	  s += 1;
 	}
       }
 
-      // Check for numbers
-      if (c >= '0' && c <= '9') {
+      // Check for base
+      else if (c == '0') {
+	c = *s++;
+	if (c == 'x') base = 16;
+	else if (c == 'b') base = 2;
+	else s -= 2;
+	c = *s++;
+      }
+
+      // Check for literal numbers
+      if ((c >= '0' && c <= '9') || ((base > 10) && c >= 'a' && c <= 'f')) {
 	int val = 0;
 	do {
-	  val = val * 10 + (c - '0');
+	  if (base > 10 && c >= 'a')
+	    val = (val * base) + (c - 'a') + 10;
+	  else
+	    val = (val * base) + (c - '0');
 	  c = *s++;
-	} while (c >= '0' && c <= '9');
+	} while ((c >= '0' && c <= '9') || ((base > 10) && c >= 'a' && c <= 'f'));
 	if (neg) {
 	  val = -val;
 	  neg = false;
 	}
 	push(val);
+	base = 10;
 	if (c == 0) break;
       }
 
@@ -505,7 +519,8 @@ public:
       default:
 	;
       }
-      // Special form to process
+
+      // Parse special forms
       if (left) {
 	int n = 1;
 	while ((n != 0) && ((c = *s++) != 0)) {

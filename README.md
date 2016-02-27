@@ -135,6 +135,9 @@ and compressed to:
 ```
 3,-5+6*.
 ```
+Binary literal numbers are prefixed with `0b`, and hexadecimal with
+`0x` as in C.
+
 ### Literal Characters
 
 Quote (back-tick) a character to push it on the parameter stack.
