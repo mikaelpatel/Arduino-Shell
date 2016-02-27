@@ -51,59 +51,59 @@ File>Examples menu.
 
 ## Instruction Set
 
-Opcode | Parameters | Description
---------|------------|------------
-, | -- | no operation
-~ | x -- ~x | bitwise not
-@ | addr -- val | read variable
-! | val addr -- | write variable
-# | x y -- x!=y | not equal
-= | x y -- x==y | equal
-< | x y -- x<y | less than
-> | x y -- x>y | greater than
-& | x y -- x&y | bitwise and
-^ | x y -- x^y | bitwise xor
-+ | x y -- x+y | addition
-- | x y -- x-y | subtraction
-* | x y -- x*y | multiplication
-/ | x y -- x/y | division
-% | x y -- x%y | modulo
-. | x -- | print number followed by one space
-c | xn ... x1 -- | clear
-d | x -- x x | duplicate
-e | flag if-block else-block -- | execute block on flag
-i | flag block -- | execute block if flag is true
-k | -- [char -1] or 0 | non-blocking read character from input stream
-l | n block -- | execute block n-times
-m | -- | write new line to output stream
-n | x -- -x | negate
-o | x y -- x y x | over
-p | xn ... x1 n -- xn ... x1 xn | pick
-q | x -- x x or 0 | duplicate if not zero
-r | x y z --- y z x | rotate
-s | x y -- y x | swap
-t | -- | toggle trace mode
-u | x -- | drop
-v | x -- | write character to output stream
-w | block( -- flag) -- | execute block while flag is true
-x | script/block -- | execute script or block
-y | -- | yield for multi-tasking scheduler
-z | -- | print stack contents
-A | pin -- sample | analogRead(pin)
-D | ms -- | delay
-F | -- 0 | false
-H | pin -- | digitalWrite(pin, HIGH)
-I | pin -- | pinMode(pin, INPUT)
-K | -- char | blocking read character from input stream
-L | pin -- | digitalWrite(pin, LOW)
-M | -- ms | millis()
-N | -- | no operation
-O | pin -- | pinMode(pin, OUTPUT)
-P | value pin -- | analogWrite(pin, value)
-R | pin --  value | digitalRead(pin)
-T | -- -1 | true
-U | pin -- | pinMode(pin, INPUT_PULLUP)
-W | value pin -- | digitalWrite(pin, value)
+Opcode | Parameters | Description | Forth
+--------|------------|------------|------
+, | -- | no operation |
+~ | x -- ~x | bitwise not | NOT
+@ | addr -- val | read variable | @
+! | val addr -- | write variable | !
+# | x y -- x!=y | not equal |
+= | x y -- x==y | equal | =
+< | x y -- x<y | less than | <
+> | x y -- x>y | greater than | >
+& | x y -- x&y | bitwise and | AND
+^ | x y -- x^y | bitwise xor | XOR
++ | x y -- x+y | addition | +
+- | x y -- x-y | subtraction | -
+* | x y -- x*y | multiplication | *
+/ | x y -- x/y | division | /
+% | x y -- x%y | modulo | MOD
+. | x -- | print number followed by one space | .
+c | xn ... x1 -- | clear |
+d | x -- x x | duplicate | DUP
+e | flag if-block else-block -- | execute block on flag | IF ELSE THEN
+i | flag block -- | execute block if flag is true | IF THEN
+k | -- [char -1] or 0 | non-blocking read character from input stream |
+l | n block -- | execute block n-times | FOR LOOP
+m | -- | write new line to output stream | CR
+n | x -- -x | negate | NEGATE
+o | x y -- x y x | over | OVER
+p | xn ... x1 n -- xn ... x1 xn | pick | PICK
+q | x -- x x or 0 | duplicate if not zero | ?DUP
+r | x y z --- y z x | rotate | ROT
+s | x y -- y x | swap | SWAP
+t | -- | toggle trace mode |
+u | x -- | drop | DROP
+v | char -- | write character to output stream | EMIT
+w | block( -- flag) -- | execute block while flag is true | BEGIN UNTIL
+x | script/block -- | execute script or block | EXECUTE
+y | -- | yield for multi-tasking scheduler |
+z | -- | print stack contents | .S
+A | pin -- sample | analogRead(pin) |
+D | ms -- | delay |
+F | -- 0 | false |
+H | pin -- | digitalWrite(pin, HIGH) |
+I | pin -- | pinMode(pin, INPUT) |
+K | -- char | blocking read character from input stream  | KEY
+L | pin -- | digitalWrite(pin, LOW)  |
+M | -- ms | millis() |
+N | -- | no operation |
+O | pin -- | pinMode(pin, OUTPUT) |
+P | value pin -- | analogWrite(pin, value) |
+R | pin --  value | digitalRead(pin) |
+T | -- -1 | true |
+U | pin -- | pinMode(pin, INPUT_PULLUP) |
+W | value pin -- | digitalWrite(pin, value) |
 
 ## Special forms
 
@@ -122,17 +122,21 @@ The instructions to push the boolean values are _T_ and _F_.
 Integer numbers may be used directly in scripts. When the script is
 executed the value of the number is pushed on the parameter stack. The
 statement;
-````
+```
 print((3 + (-5)) * 6)
-````
+```
 may be written as the following script expression:
-````
+```
 3 -5 + 6 * .
-````
+```
 and compressed to:
-````
+```
 3,-5+6*.
-````
+```
+### Literal Characters
+
+Quote (back-tick) a character to push it on the parameter stack.
+
 ### Blocks
 
 Code blocks have the following form _{ code-block }_. They begin with left

@@ -337,7 +337,7 @@ public:
     case 'u': // x -- | drop
       pop();
       break;
-    case 'v': // x -- | write character to output stream
+    case 'v': // char -- | write character to output stream
       m_ios.write(pop());
       break;
     case 'w': // block( -- flag) -- | execute block while
