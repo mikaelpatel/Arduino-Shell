@@ -62,6 +62,7 @@ Opcode | Parameters | Description | Forth
 < | x y -- x<y | less than | <
 > | x y -- x>y | greater than | >
 & | x y -- x&y | bitwise and | AND
+&#124; | x y -- x&#124;y | bitwise or | OR
 ^ | x y -- x^y | bitwise xor | XOR
 + | x y -- x+y | addition | +
 - | x y -- x-y | subtraction | -
@@ -69,7 +70,7 @@ Opcode | Parameters | Description | Forth
 / | x y -- x/y | division | /
 % | x y -- x%y | modulo | MOD
 . | x -- | print number followed by one space | .
-c | xn ... x1 -- | clear |
+c | xn ... x1 -- | clear | ABORT
 d | x -- x x | duplicate | DUP
 e | flag if-block else-block -- | execute block on flag | IF ELSE THEN
 i | flag block -- | execute block if flag is true | IF THEN
