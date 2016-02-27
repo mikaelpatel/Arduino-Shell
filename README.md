@@ -3,7 +3,8 @@
 This library provides a forth style shell for Arduino
 sketches. The shell uses a byte token threaded instruction set. The
 tokens, characters, are chosen so that it is possible to write small
-scripts directly. A token compiler is not required.
+scripts directly. A token compiler is not required. As forth scripts
+are in Reversed Polish Notation (RPN).
 
 ![screenshot](https://dl.dropboxusercontent.com/u/993383/Cosa/screenshots/Screenshot%20from%202016-02-26%2015%3A15%3A48.png)
 
@@ -54,8 +55,8 @@ Opcode | Parameters | Description
 --------|------------|------------
 \0 | -- | exit script
 , | -- | no operation
-( | -- | comment start
-) | -- | comment end
+( | -- | output string start
+) | -- | output string end
 { | -- block | block start
 } | -- | block end
 ~ | x -- ~x | bitwise not
@@ -77,15 +78,18 @@ c | xn ... x1 -- | clear
 d | x -- x x | duplicate
 e | flag if-block else-block -- | execute block on flag
 i | flag block -- | execute block if flag is true
-k | -- char or -1 | read from input stream
+k | -- char or -1 | read character from input stream
 l | n block -- | execute block n-times
+m | -- | write new line to output stream
 n | x -- -x | negate
 o | x y -- x y x | over
 p | xn ... x1 n -- xn ... x1 xn | pick
+q | x -- x x or 0 | duplicate if not zero
 r | x y z --- y z x | rotate
 s | x y -- y x | swap
 t | -- | toggle trace mode
 u | x -- | drop
+v | x -- | write character to output stream
 w | block( -- flag) -- | execute block while flag is true
 x | script/block -- | execute script or block
 z | -- | print stack contents
@@ -115,27 +119,30 @@ executed the value of the number is pushed on the parameter stack.
 
 ### Blocks
 
-Code blocks "{...}". They begin with left curley bracket and end
-with a right curley bracket. When the script is executed the address
-of the block is pushed on the parameter stack.
+Code blocks have the following form "{...}". They begin with left
+curley bracket and end with a right curley bracket. When the script is
+executed the address of the block is pushed on the parameter stack.
 
 ### Control Structures
 
 Control structures follow the same format at PostScript. They are also
 Reversed Polish Notation. The block or blocks are push on the stack
-before the control structure instruction.
+before the control structure instruction. Below are the difference
+control structure with full instruction names.
 
-    bool { if-block } *if*
-    bool { if-block } { else-block } *ifelse*
+    bool { if-block } if
+    bool { if-block } { else-block } ifelse
 
-    n { loop-block } *loop*
+    n { loop-block } loop
 
-    { while-block bool } *while*
+    { while-block bool } while
 
-### Comments
+The instructions are abbreviated i,e,l and w.
 
-Comments "(...)" are allowed in scripts, and may be nested. They are
-ignored when the script is executed.
+### Output Strings
+
+Output strings have the following form "(string)". When executed the
+string within the parenthesis is written to the output stream.
 
 ## Example Scripts
 
@@ -193,7 +200,7 @@ Script:
 2U13O{2R~{13H1000D13L1000D}iT}w
 ````
 
-### Factorial function
+### Iterative Factorial
 ````
 : fac ( n -- n! )
   1 swap
@@ -210,7 +217,7 @@ Script:
 5,1s{d0>{so*s1-T}{uF}e}w.
 ````
 
-### Range check [low..high].
+### Range check [low..high]
 ````
 : within ( x low high -- bool )
   rot swap over swap > swap rot < or not ;

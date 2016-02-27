@@ -272,7 +272,7 @@ public:
     case 'c': // xn ... x1 -- | clear
       clear();
       break;
-    case 'd': // x -- x x | dup
+    case 'd': // x -- x x | duplicate
       push(tos());
       break;
     case 'e': // flag if-block else-block -- | execute block on flag
@@ -292,11 +292,17 @@ public:
       script = (const char*) pop();
       if (pop() && execute(script) != NULL) return (false);
       break;
+    case 'k': // -- char or -1 | read from input stream
+      push(m_ios.read());
+      break;
     case 'l': // n block -- | execute block n-times
       script = (const char*) pop();
       n = pop();
       while (n--)
 	if (execute(script) != NULL) return (false);
+      break;
+    case 'm': // -- | write new line to output stream
+      m_ios.println();
       break;
     case 'n': // x -- -x | negate
       tos(-tos());
@@ -306,6 +312,9 @@ public:
       break;
     case 'p': // xn ... x1 n -- xn ... x1 xn | pick
       tos(*(m_sp - tos() + 1));
+      break;
+    case 'q': // x -- x x or 0 | duplicate if not zero
+      if (tos()) push(tos());
       break;
     case 'r': // x y z --- y z x | rotate
       val = tos();
@@ -323,6 +332,9 @@ public:
       break;
     case 'u': // x -- | drop
       pop();
+      break;
+    case 'v': // x -- | write character to output stream
+      m_ios.write(pop());
       break;
     case 'w': // block( -- flag) -- | execute block while
       script = (const char*) pop();
@@ -441,7 +453,7 @@ public:
 	print();
       }
 
-      // Check for special forms
+      // Check for special forms; code blocks, and output strings
       char left = 0, right;
       if (c == '{') {
 	left = '{';
@@ -457,6 +469,7 @@ public:
 	while ((n != 0) && ((c = *s++) != 0)) {
 	  if (c == left) n++;
 	  else if (c == right) n--;
+	  if (left == '(' && n > 0) m_ios.print(c);
 	}
 	if (c == 0) {
 	  s -= 1;
