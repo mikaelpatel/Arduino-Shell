@@ -4,7 +4,7 @@ This library provides a forth style shell for Arduino
 sketches. The shell uses a byte token threaded instruction set. The
 tokens, characters, are chosen so that it is possible to write small
 scripts directly. A token compiler is not required. As forth scripts
-are in Reversed Polish Notation (RPN).
+are in Reverse Polish Notation (RPN).
 
 ![screenshot](https://dl.dropboxusercontent.com/u/993383/Cosa/screenshots/Screenshot%20from%202016-02-26%2015%3A15%3A48.png)
 
@@ -123,9 +123,8 @@ The instructions to push the boolean values are _T_ and _F_.
 ### Literal Numbers
 
 Integer numbers may be used directly in scripts. When the script is
-executed the value of the number is pushed on the parameter stack.
-
-The statement;
+executed the value of the number is pushed on the parameter stack. The
+statement;
 ````
 print((3 + (-5)) * 6)
 ````
@@ -146,7 +145,7 @@ executed the address of the block is pushed on the parameter stack.
 ### Control Structures
 
 Control structures follow the same format at PostScript. They are also
-Reversed Polish Notation. The block or blocks are push on the stack
+Reverse Polish Notation (RPN). The block or blocks are push on the stack
 before the control structure instruction. Below are the difference
 control structure with full instruction names.
 ````
