@@ -141,7 +141,7 @@ Quote (back-tick) a character to push it on the parameter stack.
 
 ### Blocks
 
-Code blocks have the following form _{ code-block }_. They begin with left
+Code blocks have the following form `{ code-block }`. They begin with left
 curley bracket and end with a right curley bracket. When the script is
 executed the address of the block is pushed on the parameter stack.
 
