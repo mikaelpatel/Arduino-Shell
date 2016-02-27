@@ -74,7 +74,7 @@ c | xn ... x1 -- | clear | ABORT
 d | x -- x x | duplicate | DUP
 e | flag if-block else-block -- | execute block on flag | IF ELSE THEN
 i | flag block -- | execute block if flag is true | IF THEN
-k | -- [char -1] or 0 | non-blocking read character from input stream |
+k | -- [char true] or false | non-blocking read character from input stream |
 l | n block -- | execute block n-times | DO LOOP
 m | -- | write new line to output stream | CR
 n | x -- -x | negate | NEGATE
@@ -92,17 +92,17 @@ y | -- | yield for multi-tasking scheduler |
 z | -- | print stack contents | .S
 A | pin -- sample | analogRead(pin) |
 D | ms -- | delay |
-F | -- 0 | false | 0
+F | -- false | false | 0
 H | pin -- | digitalWrite(pin, HIGH) |
 I | pin -- | pinMode(pin, INPUT) |
-K | -- char | blocking read character from input stream  | KEY
+K | -- char | read character from input stream  | KEY
 L | pin -- | digitalWrite(pin, LOW)  |
 M | -- ms | millis() |
 N | -- | no operation |
 O | pin -- | pinMode(pin, OUTPUT) |
 P | value pin -- | analogWrite(pin, value) |
-R | pin --  value | digitalRead(pin) |
-T | -- -1 | true | -1
+R | pin --  bool | digitalRead(pin) |
+T | -- true | true | -1
 U | pin -- | pinMode(pin, INPUT_PULLUP) |
 W | value pin -- | digitalWrite(pin, value) |
 

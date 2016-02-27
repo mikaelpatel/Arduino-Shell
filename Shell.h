@@ -218,19 +218,19 @@ public:
       break;
     case '#': // x y -- x!=y | not equal
       val = pop();
-      tos(tos() != val ? -1 : 0);
+      tos(as_bool(tos() != val));
       break;
     case '=': // x y -- x==y | equal
       val = pop();
-      tos(tos() == val ? -1 : 0);
+      tos(as_bool(tos() == val));
       break;
     case '<': // x y -- x<y | less than
       val = pop();
-      tos(tos() < val ? -1 : 0);
+      tos(as_bool(tos() < val));
       break;
     case '>': // x y -- x>y | greater than
       val = pop();
-      tos(tos() > val ? -1 : 0);
+      tos(as_bool(tos() > val));
       break;
     case '&': // x y -- x&y | bitwise and
       val = pop();
@@ -291,10 +291,11 @@ public:
       script = (const char*) pop();
       if (pop() && execute(script) != NULL) return (false);
       break;
-    case 'k': // -- [char -1] or 0 | non-blocking read from input stream
+    case 'k': // -- [char true] or false | non-blocking read from input stream
       val = m_ios.read();
-      if (val < 0) push(0);
-      else {
+      if (val < 0) {
+	push(0);
+      } else {
 	push(val);
 	push(-1);
       }
@@ -317,7 +318,7 @@ public:
     case 'p': // xn ... x1 n -- xn ... x1 xn | pick
       tos(*(m_sp - tos() + 1));
       break;
-    case 'q': // x -- x x or 0 | duplicate if not zero
+    case 'q': // x -- [x x] or 0 | duplicate if not zero
       if (tos()) push(tos());
       break;
     case 'r': // x y z --- y z x | rotate
@@ -362,7 +363,7 @@ public:
     case 'D': // ms -- | delay()
       delay(pop());
       break;
-    case 'F': // -- 0 | false
+    case 'F': // -- false | false
       push(0);
       break;
     case 'H': // pin -- | digitalWrite(pin, HIGH)
@@ -390,10 +391,10 @@ public:
       pin = pop();
       analogWrite(pin, pop());
       break;
-    case 'R': // pin -- value | digitalRead(pin)
-      tos(digitalRead(tos()) ? -1 : 0);
+    case 'R': // pin -- bool | digitalRead(pin)
+      tos(as_bool(digitalRead(tos())));
       break;
-    case 'T': // -- -1 | true
+    case 'T': // -- true | true
       push(-1);
       break;
     case 'U': // pin -- | pinMode(pin, INPUT_PULLUP)
@@ -544,6 +545,16 @@ protected:
   int m_marker;
   bool m_trace;
   Stream& m_ios;
+
+  /**
+   * Map given integer value to boolean (true(-1) and false(0)).
+   * @param[in] val value.
+   * @return bool.
+   */
+  int as_bool(int val)
+  {
+    return (val ? -1 : 0);
+  }
 };
 
 #endif
