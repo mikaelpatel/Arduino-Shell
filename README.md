@@ -74,7 +74,7 @@ c | xn..x1 -- | clear | ABORT
 d | x -- x x | duplicate | DUP
 e | flag if-block else-block -- | execute block on flag | IF ELSE THEN
 i | flag block -- | execute block if flag is true | IF THEN
-j | xn..x1 -- xn..x1 n | stack depth
+j | xn..x1 -- xn..x1 n | stack depth | DEPTH
 k | -- [char true] or false | non-blocking read character from input stream |
 l | n block -- | execute block n-times | DO LOOP
 m | -- | write new line to output stream | CR
