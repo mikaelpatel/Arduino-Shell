@@ -138,16 +138,16 @@ and compressed to:
 ````
 ### Blocks
 
-Code blocks have the following form _{...}_. They begin with left
+Code blocks have the following form _{ code-block }_. They begin with left
 curley bracket and end with a right curley bracket. When the script is
 executed the address of the block is pushed on the parameter stack.
 
 ### Control Structures
 
 Control structures follow the same format at PostScript. They are also
-Reverse Polish Notation (RPN). The block or blocks are push on the stack
-before the control structure instruction. Below are the difference
-control structure with full instruction names.
+Reverse Polish Notation (RPN). The block(s) is/are pushed on the stack
+before the control structure instruction. Below are the control
+structures with full instruction names.
 ````
 bool { if-block } if
 bool { if-block } { else-block } ifelse
@@ -160,7 +160,7 @@ The instructions are _i_,_e_,_l_ and _w_.
 
 ### Output Strings
 
-Output strings have the following form _(...)_. When executed the
+Output strings have the following form _( output string )_. When executed the
 string within the parenthesis is written to the output stream. The
 instruction _m_ will print a new-line (corresponds to forth cr).
 
