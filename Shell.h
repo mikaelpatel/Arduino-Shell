@@ -287,6 +287,10 @@ public:
       pop();
       if (execute(script) != NULL) return (false);
       break;
+    case 'f': // block -- | deallocate block
+      script = (const char*) pop();
+      if (script != NULL) free((void*) script);
+      break;
     case 'i': // flag block -- | execute block if flag is true
       script = (const char*) pop();
       if (pop() && execute(script) != NULL) return (false);
@@ -487,6 +491,15 @@ public:
       switch (c) {
       case ' ': // -- | no operation
       case ',':
+	continue;
+      case '\\': // block1 -- block2 | copy script
+	{
+	  const char* src = (const char*) pop();
+	  size_t len = s - src;
+	  char* dest = (char*) malloc(len);
+	  strlcpy(dest, src, len);
+	  push(dest);
+	}
 	continue;
       case '$': // -- | trap
 	c = *s;

@@ -148,6 +148,11 @@ Code blocks have the following form `{ code-block }`. They begin with left
 curley bracket and end with a right curley bracket. When the script is
 executed the address of the block is pushed on the parameter stack.
 
+The code block suffix `\` will copy the code block to the heap. The
+address of the copied block is pushed on the parameter stack. This may
+be assigned to a variable. The instruction _f_ may be used to free the
+code block.
+
 ### Control Structures
 
 Control structures follow the same format at PostScript. They are also
@@ -196,6 +201,11 @@ shell.write(0, blink);
 ```
 These can then be called from a script:
 ```
+0@x
+```
+A code block can be directly copied and stored to a varible:
+```
+{13H1000D13L1000D}\0!
 0@x
 ```
 
