@@ -420,7 +420,7 @@ public:
       analogWrite(pin, pop());
       break;
     case 'R': // pin -- bool | digitalRead(pin)
-      pin = pop();
+      pin = tos();
       tos(as_bool(digitalRead(pin)));
       break;
     case 'T': // -- true | true
@@ -515,6 +515,8 @@ public:
       case ' ': // -- | no operation
       case ',':
 	continue;
+      case '}':
+	return (NULL);
       case '\\': // block -- block len | copy script
 	{
 	  const char* script = (const char*) tos();
