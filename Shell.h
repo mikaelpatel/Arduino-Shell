@@ -286,6 +286,13 @@ public:
 	push(dest);
       }
       break;
+    case 'b': // xn..x1 n -- | drop n stack elements
+      n = tos();
+      if (depth() > n) {
+	m_sp += n;
+	pop();
+	break;
+      }
     case 'c': // xn..x1 -- | clear
       clear();
       break;

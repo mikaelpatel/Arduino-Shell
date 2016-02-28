@@ -71,6 +71,7 @@ Opcode | Parameters | Description | Forth
 % | x y -- x%y | modulo | MOD
 . | x -- | print number followed by one space | .
 a | block1 len -- block2 | allocate block |
+b | xn..x1 n -- | drop n stack elements |
 c | xn..x1 -- | clear | ABORT
 d | x -- | drop | DROP
 e | flag if-block else-block -- | execute block on flag | IF ELSE THEN
@@ -90,7 +91,7 @@ t | -- | toggle trace mode |
 u | x -- x x | duplicate | DUP
 v | char -- | write character to output stream | EMIT
 w | block( -- flag) -- | execute block while flag is true | BEGIN UNTIL
-x | script/block -- | execute script or block |
+x | script/block -- | execute script/block | EXECUTE
 y | -- | yield for multi-tasking scheduler |
 z | -- | print stack contents | .S
 A | pin -- sample | analogRead(pin) |
