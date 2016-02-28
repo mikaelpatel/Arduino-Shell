@@ -208,8 +208,8 @@ parameter stack.
 ### Extended Instructions
 
 Shell allows application extension with a virtual member function,
-trap(op). The function is called when the current instruction (op)
-could not be handled.
+trap(). The function is called when the current instruction could not
+be handled. The trap() function may parse any number of instructions.
 
 ## Example Scripts
 

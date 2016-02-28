@@ -452,7 +452,7 @@ public:
    * codes). Return NULL if successful otherwise script reference that
    * failed. Prints error position in trace mode.
    * @param[in] s script.
-   * @return bool.
+   * @return script reference or NULL.
    */
   const char* execute(const char* s)
   {
@@ -582,7 +582,10 @@ public:
       if (execute(c)) continue;
 
       // Check for trap operation code
-      if (!trap(c)) break;
+      s = s - 1;
+      const char* p = trap(s);
+      if (p == NULL) break;
+      s = p;
     }
 
     // Check for no errors
@@ -591,26 +594,25 @@ public:
     // Check for trace mode and error print
     if (m_trace) {
       m_ios.print(t);
-      for (int i = 0, n = s - t - 1; i < n; i++)
+      for (int i = 0, n = s - t; i < n; i++)
 	m_ios.print(' ');
       m_ios.println(F("^--?"));
     }
 
     // Return error position
-    return (s - 1);
+    return (s);
   }
 
   /**
-   * Execute given extened operation code (character). Return true if
-   * successful otherwise false.
-   * @param[in] op operation code.
-   * @return bool.
+   * Execute script with extended operation code (character). Return
+   * next script reference if successful otherwise NULL.
+   * @param[in] s script.
+   * @return script reference or NULL.
    */
-  virtual bool trap(char op)
+  virtual const char* trap(const char*)
   {
-    return (op == 0);
+    return (NULL);
   }
-
 
 protected:
   int m_stack[STACK_MAX];
@@ -645,7 +647,6 @@ protected:
       return (c >= 'a' && c <= 'f');
     return (c >= '0' && c <= '9');
   }
-
 };
 
 #endif

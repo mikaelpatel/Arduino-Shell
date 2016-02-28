@@ -27,11 +27,12 @@ class ExtendedShell : public BaseShell {
 public:
   ExtendedShell(Stream& ios) : BaseShell(ios)
   {}
-  virtual bool trap(char op)
+  virtual const char* trap(const char* s)
   {
+    char op = *s++;
     m_ios.print(F("trap::op="));
     m_ios.println(op);
-    return (true);
+    return (s);
   }
 };
 
