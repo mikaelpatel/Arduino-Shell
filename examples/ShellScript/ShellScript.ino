@@ -38,7 +38,7 @@ void setup()
   //   dup output
   //   rot { dup high over delay dup low over delay } loop
   //   drop drop ;
-  const char* blinks = "dOr{dHoDdLoD}luu";
+  const char* blinks = "uOr{uHoDuLoD}ldd";
 
   Serial.println(F("5 1000 13 blinks"));
   shell.push(5);
@@ -58,7 +58,7 @@ void setup()
   //      over high dup delay over low delay
   //      true
   //   } while ;
-  const char* monitor = "oUdO{oR{1000}{200}eoHdDoLDT}w";
+  const char* monitor = "oUuO{oR{1000}{200}eoHuDoLDT}w";
 
   Serial.println(F("2 13 monitor"));
   shell.push(2);
