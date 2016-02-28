@@ -34,7 +34,7 @@ public:
    * @param[in] ios input output stream.
    */
   Shell(Stream& ios) :
-    m_sp(m_stack - 1),
+    m_sp(m_stack + STACK_MAX),
     m_tos(0),
     m_marker(-1),
     m_trace(false),
@@ -67,7 +67,7 @@ public:
    */
   int depth() const
   {
-    return (m_sp - m_stack + 1);
+    return (m_stack + STACK_MAX - m_sp);
   }
 
   /**
@@ -89,13 +89,21 @@ public:
   }
 
   /**
+   * Drop top element from parameter stack.
+   */
+  void drop()
+  {
+    m_tos = (depth() > 0) ? *m_sp++ : 0;
+  }
+
+  /**
    * Pop top element from parameter stack.
    * @return top of stack.
    */
   int pop()
   {
     int res = m_tos;
-    m_tos = (depth() > 0) ? *m_sp-- : 0;
+    m_tos = (depth() > 0) ? *m_sp++ : 0;
     return (res);
   }
 
@@ -105,7 +113,7 @@ public:
    */
   void push(int val)
   {
-    if (depth() != STACK_MAX) *++m_sp = m_tos;
+    if (depth() != STACK_MAX) *--m_sp = m_tos;
     m_tos = val;
   }
 
@@ -123,7 +131,7 @@ public:
    */
   void clear()
   {
-    m_sp = m_stack - 1;
+    m_sp = m_stack + STACK_MAX;
   }
 
   /**
@@ -167,10 +175,10 @@ public:
     m_ios.print(n);
     m_ios.print(':');
     if (n > 0) {
-      int* tp = m_stack + 1;
+      int* tp = m_stack + STACK_MAX - 1;
       while (--n) {
 	m_ios.print(' ');
-	m_ios.print(*tp++);
+	m_ios.print(*--tp);
       }
       m_ios.print(' ');
       m_ios.print(m_tos);
@@ -214,7 +222,8 @@ public:
       break;
     case '!': // val addr -- | write variable
       addr = pop();
-      write(addr, pop());
+      val = pop();
+      write(addr, val);
       break;
     case '#': // x y -- x!=y | not equal
       val = pop();
@@ -268,26 +277,35 @@ public:
       m_ios.print(pop());
       m_ios.print(' ');
       break;
+    case 'a': // block1 len -- block2 | allocate block
+      {
+	size_t len = (size_t) pop();
+	const char* src = (const char*) pop();
+	char* dest = (char*) malloc(len + 1);
+	strlcpy(dest, src, len);
+	push(dest);
+      }
+      break;
     case 'c': // xn..x1 -- | clear
       clear();
       break;
-    case 'd': // x -- x x | duplicate
-      push(tos());
+    case 'd': // x -- | drop
+      drop();
       break;
     case 'e': // flag if-block else-block -- | execute block on flag
-      val = *(m_sp - 1);
+      val = *(m_sp + 1);
       if (val != 0) {
-	pop();
+	drop();
 	script = (const char*) pop();
       }
       else {
 	script = (const char*) pop();
-	pop();
+	drop();
       }
-      pop();
+      drop();
       if (execute(script) != NULL) return (false);
       break;
-    case 'f': // block -- | deallocate block
+    case 'f': // block -- | free block
       script = (const char*) pop();
       if (script != NULL) free((void*) script);
       break;
@@ -323,15 +341,15 @@ public:
       push(*m_sp);
       break;
     case 'p': // xn..x1 n -- xn..x1 xn | pick
-      tos(*(m_sp - tos() + 1));
+      tos(*(m_sp + tos() - 1));
       break;
     case 'q': // x -- [x x] or 0 | duplicate if not zero
       if (tos()) push(tos());
       break;
     case 'r': // x y z --- y z x | rotate
       val = tos();
-      tos(*(m_sp - 1));
-      *(m_sp - 1) = *m_sp;
+      tos(*(m_sp + 1));
+      *(m_sp + 1) = *m_sp;
       *m_sp = val;
       break;
     case 's': // x y -- y x | swap
@@ -342,8 +360,8 @@ public:
     case 't': // -- | toggle trace mode
       m_trace = !m_trace;
       break;
-    case 'u': // x -- | drop
-      pop();
+    case 'u': // x -- x x | duplicate
+      push(tos());
       break;
     case 'v': // char -- | write character to output stream
       m_ios.write(pop());
@@ -365,7 +383,8 @@ public:
       print();
       break;
     case 'A': // pin -- sample | analogRead(pin)
-      tos(analogRead(tos()));
+      pin = tos();
+      tos(analogRead(pin));
       break;
     case 'D': // ms -- | delay()
       delay(pop());
@@ -374,7 +393,8 @@ public:
       push(0);
       break;
     case 'H': // pin -- | digitalWrite(pin, HIGH)
-      digitalWrite(pop(), HIGH);
+      pin = pop();
+      digitalWrite(pin, HIGH);
       break;
     case 'I': // pin -- | pinMode(pin, INPUT)
       pinMode(pop(), INPUT);
@@ -392,20 +412,23 @@ public:
     case 'N': // -- | no operation
       break;
     case 'O': // pin -- | pinMode(pin, OUTPUT)
-      pinMode(pop(), OUTPUT);
+      pin = pop();
+      pinMode(pin, OUTPUT);
       break;
     case 'P': // value pin -- | analogWrite(pin, value)
       pin = pop();
       analogWrite(pin, pop());
       break;
     case 'R': // pin -- bool | digitalRead(pin)
-      tos(as_bool(digitalRead(tos())));
+      pin = pop();
+      tos(as_bool(digitalRead(pin)));
       break;
     case 'T': // -- true | true
       push(-1);
       break;
     case 'U': // pin -- | pinMode(pin, INPUT_PULLUP)
-      pinMode(pop(), INPUT_PULLUP);
+      pin = pop();
+      pinMode(pin, INPUT_PULLUP);
       break;
     case 'W': // value pin -- | digitalWrite(pin, value)
       pin = pop();
@@ -492,23 +515,12 @@ public:
       case ' ': // -- | no operation
       case ',':
 	continue;
-      case '\\': // block1 -- block2 | copy script
+      case '\\': // block -- block len | copy script
 	{
-	  const char* src = (const char*) pop();
-	  size_t len = s - src;
-	  char* dest = (char*) malloc(len);
-	  strlcpy(dest, src, len);
-	  push(dest);
+	  const char* script = (const char*) tos();
+	  push(s - script - 1);
 	}
 	continue;
-      case '$': // -- | trap
-	c = *s;
-	if (c != 0 && trap(c)) {
-	  s += 1;
-	  continue;
-	}
-	c = '$';
-	break;
       case '\'': // -- char | push character
 	c = *s;
 	if (c != 0) {
@@ -558,7 +570,10 @@ public:
       }
 
       // Execute operation code
-      if (!execute(c)) break;
+      if (execute(c)) continue;
+
+      // Check for trap operation code
+      if (!trap(c)) break;
     }
 
     // Check for no errors
@@ -584,7 +599,7 @@ public:
    */
   virtual bool trap(char op)
   {
-    return (op != 0);
+    return (op == 0);
   }
 
 
