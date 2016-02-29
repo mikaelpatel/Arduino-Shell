@@ -6,10 +6,10 @@ tokens, characters, are chosen so that it is possible to write small
 scripts directly. A token compiler is not required. As forth scripts
 are in Reverse Polish Notation (RPN).
 
-![screenshot](https://dl.dropboxusercontent.com/u/993383/Cosa/screenshots/Screenshot%20from%202016-02-26%2015%3A15%3A48.png)
+![screenshot](https://dl.dropboxusercontent.com/u/993383/Cosa/screenshots/Screenshot%20from%202016-02-29%2011%3A00%3A13.png)
 
-Shell has trace built-in. It will display the execution of the
-script with current script address, opcode, stack depth and
+The shell has built-in instruction level trace. It prints the
+instruction cycle count, script address, opcode, stack depth and
 contents). Typical output in the Serial Monitor above.
 
 The classical blink sketch in the shell script language is

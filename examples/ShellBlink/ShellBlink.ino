@@ -22,19 +22,14 @@
 
 #include <Shell.h>
 
-class NullDeviceClass : public Stream {
-public:
-  virtual size_t write(uint8_t) { return (1); }
-  virtual int available() { return (0); }
-  virtual int read() { return (-1); }
-  virtual int peek() { return (-1); }
-  virtual void flush() {}
-} NullDevice;
-
-Shell<16,16> shell(NullDevice);
+Shell<16,16> shell(Serial);
 
 void setup()
 {
+  Serial.begin(57600);
+  while (!Serial);
+  Serial.println(F("ShellBlink: started"));
+
   // : blink ( ms pin -- )
   //   dup output
   //   {
@@ -43,6 +38,9 @@ void setup()
   //      true
   //    } while ;
   const char* blink = "uO{uHoDuLoDT}w";
+
+  // 1000 13 blink
+  shell.trace(true);
   shell.push(1000);
   shell.push(13);
   shell.execute(blink);
