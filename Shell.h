@@ -602,7 +602,7 @@ public:
     }
 
     // Check for no errors
-    if (c == 0) m_cycle = 0;
+    if (c != '}') m_cycle = 0;
     if (c == 0 || c == '}') return (NULL);
 
     // Check for trace mode and error print
