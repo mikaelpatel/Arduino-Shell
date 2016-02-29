@@ -38,6 +38,7 @@ public:
     m_tos(0),
     m_marker(-1),
     m_trace(false),
+    m_cycle(0),
     m_ios(ios)
   {
     memset(m_var, 0, sizeof(m_var));
@@ -519,6 +520,8 @@ public:
 
       // Check for trace mode
       if (m_trace) {
+	m_ios.print(++m_cycle);
+	m_ios.print(':');
 	m_ios.print((int) s - 1);
 	m_ios.print(':');
 	m_ios.print(c);
@@ -599,6 +602,7 @@ public:
     }
 
     // Check for no errors
+    if (c == 0) m_cycle = 0;
     if (c == 0 || c == '}') return (NULL);
 
     // Check for trace mode and error print
@@ -631,6 +635,7 @@ protected:
   int m_tos;
   int m_marker;
   bool m_trace;
+  unsigned m_cycle;
   Stream& m_ios;
 
   /**
