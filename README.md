@@ -80,6 +80,7 @@ d | x -- | drop | DROP
 e | flag if-block else-block -- | execute block on flag | IF ELSE THEN
 f | block -- | free block |
 g | xn..x1 n -- xn-1..x1 xn | rotate n-elements | ROLL
+h | x y z -- (x*y)/z | scale | */
 i | flag block -- | execute block if flag is true | IF THEN
 j | xn..x1 -- xn..x1 n | stack depth | DEPTH
 k | -- [char true] or false | non-blocking read character from input stream |
@@ -144,10 +145,16 @@ and compressed to:
 ```
 Binary literal numbers are prefixed with `0b`, and hexadecimal with
 `0x` as in C.
+```
+10 . 0b10 . 0x10 .
+```
 
 ### Literal Characters
 
-Quote (back-tick) a character to push it on the parameter stack.
+Quote (apostrophe) a character to push it on the parameter stack.
+```
+'A .
+```
 
 ### Variables
 
@@ -227,7 +234,9 @@ the first argument, and last remove the frame, leaving the two values.
 
 Shell allows application extension with a virtual member function,
 trap(). The function is called when the current instruction could not
-be handled. The trap() function may parse any number of instructions.
+be handled. The trap() function may parse any number of
+instructions. The backtick (aka grave accent) is reserved as an escape
+operation code.
 
 ## Example Scripts
 

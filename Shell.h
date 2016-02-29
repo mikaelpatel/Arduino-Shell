@@ -341,6 +341,11 @@ public:
       }
       else drop();
       break;
+    case 'h': // x y z -- x*y/z | scale
+      val = pop();
+      n = pop();
+      tos(tos() * ((long) n) / val);
+      break;
     case 'i': // flag block -- | execute block if flag is true
       script = (const char*) pop();
       if (pop() && execute(script) != NULL) return (false);
@@ -607,7 +612,7 @@ public:
       }
 
       // Execute operation code
-      if (execute(c)) continue;
+      if (c != '`' && execute(c)) continue;
 
       // Check for trap operation code
       s = s - 1;
