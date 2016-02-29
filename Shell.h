@@ -219,12 +219,13 @@ public:
     case '$': // x1..xn n -- x1..xn| mark n-element stack frame
               // x1..xn y1..ym n -- y1..ym | resolve n-element stack frame
       n = pop();
-      if (n >= 0) {
+      if (n > 0) {
 	m_fp = m_sp + n - 1;
       }
       else {
-	m_fp += n;
-	while (n++) *m_fp++ = *m_sp++;
+	n = m_fp - m_sp + n;
+	while (n--) *--m_fp = m_sp[n];
+	m_sp = m_fp;
       }
       break;
     case '?': // x1..xm -- n xn | pick n-th element from frame
