@@ -34,6 +34,7 @@ public:
    * @param[in] ios input output stream.
    */
   Shell(Stream& ios) :
+    m_fp(m_stack + STACK_MAX),
     m_sp(m_stack + STACK_MAX),
     m_tos(0),
     m_marker(-1),
@@ -215,8 +216,20 @@ public:
     const char* script;
     int pin, addr, val, n;
     switch (op) {
-    case '~': // x -- ~x | bitwise not
-      tos(~tos());
+    case '$': // x1..xn n -- x1..xn| mark n-element stack frame
+              // x1..xn y1..ym n -- y1..ym | resolve n-element stack frame
+      n = pop();
+      if (n >= 0) {
+	m_fp = m_sp + n - 1;
+      }
+      else {
+	m_fp += n;
+	while (n++) *m_fp++ = *m_sp++;
+      }
+      break;
+    case '?': // x1..xm -- n xn | pick n-th element from frame
+      n = tos();
+      tos(*(m_fp - n));
       break;
     case '@': // addr -- val | read variable
       tos(read(tos()));
@@ -470,6 +483,7 @@ public:
     const char* t = s;
     bool neg = false;
     int base = 10;
+    int* fp = m_fp;
     char c;
 
     // Execute operation code in script
@@ -601,6 +615,9 @@ public:
       s = p;
     }
 
+    // Restore frame pointer
+    m_fp = fp;
+
     // Check for no errors
     if (c != '}') m_cycle = 0;
     if (c == 0 || c == '}') return (NULL);
@@ -629,8 +646,9 @@ public:
   }
 
 protected:
-  int m_stack[STACK_MAX];
   int m_var[VAR_MAX];
+  int m_stack[STACK_MAX];
+  int* m_fp;
   int* m_sp;
   int m_tos;
   int m_marker;
