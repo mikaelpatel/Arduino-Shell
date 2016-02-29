@@ -1,10 +1,10 @@
 # Arduino-Shell
 
-This library provides a forth style shell for Arduino
-sketches. Shell uses a byte token threaded instruction set. The
-tokens, characters, are chosen so that it is possible to write small
-scripts directly. A token compiler is not required. As forth scripts
-are in Reverse Polish Notation (RPN).
+This library provides a forth style shell for Arduino sketches. Shell
+uses a byte token threaded instruction set. The tokens, characters,
+are chosen so that it is possible to write small scripts directly. A
+token compiler is not required. As forth scripts are in Reverse Polish
+Notation (RPN).
 
 ![screenshot](https://dl.dropboxusercontent.com/u/993383/Cosa/screenshots/Screenshot%20from%202016-02-29%2011%3A00%3A13.png)
 
@@ -20,25 +20,36 @@ And with some extra spacing to make the operations easier to read.
 ```
  13 O { 13 H 1000 D 13 L 1000 D T } w
 ```
-And with full instruction names.
-```
- 13 Output { 13 High 1000 Delay 13 Low 1000 Delay True } while
-```
-This encodes the forth statement (with mock arduino functions).
+And with full instruction names and some formatting:
 ```
  13 output
- begin
+ {
    13 high 1000 delay
    13 low  1000 delay
- repeat
+   true
+ } while
 ```
 A further compressed version (shorter):
 ```
  13O{1000,13ooHDLDT}w
+
+ 13 output
+ {
+   1000 13 over over high delay
+   low delay
+   true
+ } while
 ```
-And a faster version:
+And a slightly faster version:
 ```
- 1000,13dO{ooHDooLDT}w
+ 1000,13uO{ooHDooLDT}w
+
+ 1000 13 dup output
+ {
+   over over high delay
+   over over low delay
+   true
+ } while
 ```
 
 ## Install
