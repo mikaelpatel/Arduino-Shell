@@ -70,6 +70,9 @@ Opcode | Parameters | Description | Forth
 / | x y -- x/y | division | /
 % | x y -- x%y | modulo | MOD
 . | x -- | print number followed by one space | .
+$ | x1..xn n -- x1..xn | n > 0: mark stack frame with n-elements |
+$ | x1..xn y1..ym n -- y1..ym | n < 0: remove stack frame with n-elements |
+? | x1..xn y1..ym n -- xn | pick n-element in frame |
 a | block1 len -- block2 | allocate block |
 b | xn..x1 n -- | drop n stack elements |
 c | xn..x1 -- | clear | ABORT
