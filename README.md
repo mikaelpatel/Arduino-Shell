@@ -62,7 +62,7 @@ File>Examples menu.
 
 ## Instruction Set
 
-Opcode | Parameters | Description | Forth
+Opcode |:Parameters |:Description |:Forth
 --------|------------|------------|------
 , | -- | no operation |
 ~ | x -- ~x | bitwise not | NOT
