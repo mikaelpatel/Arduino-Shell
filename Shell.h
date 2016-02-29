@@ -316,6 +316,16 @@ public:
       script = (const char*) pop();
       if (script != NULL) free((void*) script);
       break;
+    case 'g': // xn..x1 n -- xn-1..x1 xn | rotate n-elements
+      n = tos();
+      if (n > 0 && n < depth()) {
+	tos(m_sp[--n]);
+	for (; n > 0; n--)
+	  m_sp[n] = m_sp[n - 1];
+	m_sp += 1;
+      }
+      else drop();
+      break;
     case 'i': // flag block -- | execute block if flag is true
       script = (const char*) pop();
       if (pop() && execute(script) != NULL) return (false);

@@ -76,6 +76,7 @@ c | xn..x1 -- | clear | ABORT
 d | x -- | drop | DROP
 e | flag if-block else-block -- | execute block on flag | IF ELSE THEN
 f | block -- | free block |
+g | xn..x1 n -- xn-1..x1 xn | rotate n-elements | ROLL
 i | flag block -- | execute block if flag is true | IF THEN
 j | xn..x1 -- xn..x1 n | stack depth | DEPTH
 k | -- [char true] or false | non-blocking read character from input stream |
@@ -91,7 +92,7 @@ t | -- | toggle trace mode |
 u | x -- x x | duplicate | DUP
 v | char -- | write character to output stream | EMIT
 w | block( -- flag) -- | execute block while flag is true | BEGIN UNTIL
-x | script/block -- | execute script/block | EXECUTE
+x | block -- | execute block | EXECUTE
 y | -- | yield for multi-tasking scheduler |
 z | -- | print stack contents | .S
 A | pin -- sample | analogRead(pin) |
