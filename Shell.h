@@ -143,7 +143,7 @@ public:
    */
   int read(int addr)
   {
-    if (addr < 0 || addr >= VAR_MAX) return (0);
+    if (addr < 0 || addr >= (VAR_MAX + STACK_MAX)) return (0);
     return (m_var[addr]);
   }
 
@@ -154,7 +154,7 @@ public:
    */
   void write(int addr, int val)
   {
-    if (addr < 0 || addr >= VAR_MAX) return;
+    if (addr < 0 || addr >= (VAR_MAX + STACK_MAX)) return;
     m_var[addr] = val;
   }
 
@@ -228,9 +228,9 @@ public:
 	m_sp = m_fp;
       }
       break;
-    case '?': // x1..xm -- n xn | pick n-th element from frame
+    case '_': // n -- addr | address of n-element in frame
       n = tos();
-      tos(*(m_fp - n));
+      tos((m_fp - n) - m_var);
       break;
     case '@': // addr -- val | read variable
       tos(read(tos()));
@@ -652,8 +652,6 @@ public:
   }
 
 protected:
-  int m_var[VAR_MAX];
-  int m_stack[STACK_MAX];
   int* m_fp;
   int* m_sp;
   int m_tos;
@@ -661,6 +659,8 @@ protected:
   bool m_trace;
   unsigned m_cycle;
   Stream& m_ios;
+  int m_var[VAR_MAX];
+  int m_stack[STACK_MAX];
 
   /**
    * Map given integer value to boolean (true(-1) and false(0)).

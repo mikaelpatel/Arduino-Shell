@@ -83,7 +83,7 @@ Opcode | Parameters | Description | Forth
 . | x -- | print number followed by one space | .
 $ | x1..xn n -- x1..xn | n > 0: mark stack frame with n-elements |
 $ | x1..xn y1..ym n -- y1..ym | n < 0: remove stack frame with n-elements |
-? | x1..xn..n -- xn | pick n-element in frame |
+_ | n -- addr | address of n-element in frame |
 a | block1 len -- block2 | allocate block |
 b | xn..x1 n -- | drop n stack elements |
 c | xn..x1 -- | clear | ABORT
@@ -229,14 +229,16 @@ parameter stack.
 
 ### Frame Marker
 
-A frame marker has the following form `n$ m? -n$`. Where _n_ is the
+A frame marker has the following form `n$ ... -n$` where _n_ is the
 number of parameters in the frame. Positive _n_ marks the frame and
 negative _n_ removes the frame stack elements leaving any return
-values.
+values. Elements within the frame can be accessed with `m_` where _m_
+is the element index (1..n). The element address is pushed on the
+parameter stack.
 
 Swap could be defined as:
 ```
-2$2?1?-2$
+2$2_@1_@-2$
 ```
 which will mark a frame with two arguments, copy the second and then
 the first argument, and last remove the frame, leaving the two values.
