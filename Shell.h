@@ -224,8 +224,14 @@ public:
       }
       else {
 	n = m_fp - m_sp + n;
-	while (n--) *--m_fp = m_sp[n];
-	m_sp = m_fp;
+	if (n >= 0) {
+	  while (n--) *--m_fp = m_sp[n];
+	  m_sp = m_fp;
+	}
+	else {
+	  m_sp = m_fp;
+	  pop();
+	}
       }
       break;
     case '_': // n -- addr | address of n-element in frame
