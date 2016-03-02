@@ -280,6 +280,9 @@ public:
       val = pop();
       tos(as_bool(tos() > val));
       break;
+    case '~': // x -- ~x | bitwise not
+      tos(~tos());
+      break;
     case '&': // x y -- x&y | bitwise and
       val = pop();
       tos(tos() & val);
