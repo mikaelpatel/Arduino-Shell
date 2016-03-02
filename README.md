@@ -280,6 +280,23 @@ Script:
 13O{13H1000D13L1000DT}w
 ```
 
+### Blink without delay
+
+Turn board LED, pin 13, on/off without using delay. Use time-out
+instruction.
+```
+13 output
+{
+  1000 \timer timeout
+  { 13 digitalToggle } if
+  true
+} while
+```
+Script:
+```
+13O{1000,\timer,t{13X}iT}w
+```
+
 ### Read Analog Pins
 
 Read analog pins and print value in format "An = value".
@@ -397,3 +414,4 @@ Script:
 ```
 [1,2,3]0s{+}l
 ```
+
