@@ -227,12 +227,13 @@ public:
     const char* script;
     int pin, addr, val, n;
     switch (op) {
-    case '$': // x1..xn n -- x1..xn| mark n-element stack frame
-              // x1..xn y1..ym n -- y1..ym | resolve n-element stack frame
+    case '$':
       n = pop();
+      // x1..xn n -- x1..xn | mark n-element stack frame
       if (n > 0) {
 	m_fp = m_sp + n - 1;
       }
+      // x1..xn y1..ym n -- y1..ym | resolve n-element stack frame
       else {
 	n = m_fp - m_sp + n;
 	if (n >= 0) {
@@ -249,7 +250,7 @@ public:
       n = tos();
       tos((m_fp - n) - m_var);
       break;
-    case ':': // addr -- | execute variable
+    case ':': // addr -- | execute function (variable)
       addr = pop();
       script = (const char*) read(addr);
       if (script == NULL) return (false);
@@ -523,7 +524,7 @@ public:
 	}
       }
 
-      // Check for base
+      // Check for base prefix
       else if (c == '0') {
 	c = *s++;
 	if (c == 'x') base = 16;
@@ -551,7 +552,7 @@ public:
 	if (c == 0) break;
       }
 
-      // Translate newline
+      // Translate newline (for trace mode)
       if (c == '\n') c = 'N';
 
       // Check for trace mode
@@ -571,9 +572,9 @@ public:
       case ' ': // -- | no operation
       case ',':
 	continue;
-      case '}':
+      case '}': // -- | end of block
 	return (NULL);
-      case ';': // block1 -- block2 | copy script to heap
+      case ';': // block1 -- block2 | copy block to heap
 	{
 	  const char* src = (const char*) tos();
 	  size_t len = s - src - 1;
@@ -585,7 +586,7 @@ public:
 	  else tos(-1);
 	}
 	continue;
-      case '\\': // -- addr | lookup variable
+      case '\\': // -- addr | lookup or add variable
 	{
 	  const char* name = s;
 	  size_t len = 0;
@@ -642,7 +643,7 @@ public:
 	;
       }
 
-      // Parse special forms
+      // Parse special parenphesis forms (allow nesting)
       if (left) {
 	int n = 1;
 	while ((n != 0) && ((c = *s++) != 0)) {
@@ -659,7 +660,7 @@ public:
       }
 
       // Execute operation code
-      if (c != '`' && execute(c)) continue;
+      if (c != TRAP_CHAR && execute(c)) continue;
 
       // Check for trap operation code
       s = s - 1;
@@ -701,6 +702,7 @@ public:
   }
 
 protected:
+  static const char TRAP_CHAR = '`';
   int m_dp;
   int* m_fp;
   int* m_sp;
@@ -726,7 +728,7 @@ protected:
   /**
    * Check that the given character is a digit in the given base.
    * @param[in] c character.
-   * @param[in] base must be 2, 8, 10 or 16.
+   * @param[in] base must be bin, dec or hex.
    * @return bool.
    */
   bool is_digit(char c, int base)
