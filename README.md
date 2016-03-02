@@ -104,6 +104,7 @@ p | xn..x1 n -- xn..x1 xn | pick | PICK
 q | x -- [x x] or 0 | duplicate if not zero | ?DUP
 r | x y z --- y z x | rotate | ROT
 s | x y -- y x | swap | SWAP
+t | period addr -- bool | timeout variable check |
 u | x -- x x | duplicate | DUP
 v | char -- | write character to output stream | EMIT
 w | block( -- flag) -- | execute block while flag is true | BEGIN UNTIL
@@ -126,6 +127,7 @@ S | -- | print stack contents | .S
 T | -- true | true | -1
 U | pin -- | pinMode(pin, INPUT_PULLUP) |
 W | value pin -- | digitalWrite(pin, value) |
+X | pin -- | digitalToggle(pin)  |
 Z | -- | toggle trace mode |
 
 ## Special forms

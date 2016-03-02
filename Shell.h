@@ -408,6 +408,16 @@ public:
       tos(*m_sp);
       *m_sp = val;
       break;
+    case 't': // period addr -- bool | time-out
+      addr = pop();
+      val = read(addr);
+      n = tos();
+      if ((((unsigned) millis() & 0xffff) - ((unsigned) val)) >= ((unsigned) n)) {
+	tos(-1);
+	write(addr, millis());
+      }
+      else tos(0);
+      break;
     case 'u': // x -- x x | duplicate
       push(tos());
       break;
@@ -484,6 +494,10 @@ public:
     case 'W': // value pin -- | digitalWrite(pin, value)
       pin = pop();
       digitalWrite(pin, pop());
+      break;
+    case 'X': // pin -- | digitalToggle(pin)
+      pin = pop();
+      digitalWrite(pin, !digitalRead(pin));
       break;
     case 'Z': // -- | toggle trace mode
       m_trace = !m_trace;
