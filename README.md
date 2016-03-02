@@ -65,10 +65,12 @@ File>Examples menu.
 Opcode | Parameters | Description | Forth
 -------|:-----------|:------------|:-----
 , | -- | no operation |
+: | addr -- | execute function |
 ; | block1 -- block2 | allocate block |
 ~ | x -- ~x | bitwise not | NOT
 @ | addr -- val | read variable | @
 ! | val addr -- | write variable | !
+? | addr -- | print variable | ?
 # | x y -- x!=y | not equal |
 = | x y -- x==y | equal | =
 < | x y -- x<y | less than | <
@@ -177,6 +179,10 @@ and `@`.
 42\x!
 \x@
 ```
+The operator `?` can be used to print the value of a variable.
+```
+\x?
+```
 
 ### Blocks
 
@@ -192,7 +198,10 @@ used to create a named function by assigning the block to a variable.
 ```
 { code-block };\fun!
 \fun@x
-\fun@f
+```
+The short form for execute a function is `:`.
+```
+\fun:
 ```
 The instruction _f_ may be used to free the code block.
 ```

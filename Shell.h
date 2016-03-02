@@ -249,6 +249,12 @@ public:
       n = tos();
       tos((m_fp - n) - m_var);
       break;
+    case ':': // addr -- | execute variable
+      addr = pop();
+      script = (const char*) read(addr);
+      if (script == NULL) return (false);
+      if (execute(script) != NULL) return (false);
+      break;
     case '@': // addr -- val | read variable
       tos(read(tos()));
       break;
@@ -305,6 +311,8 @@ public:
       val = pop();
       push(pop() % val);
       break;
+    case '?': // addr -- | print variable
+      tos(read(tos()));
     case '.': // x -- | print number followed by one space
       m_ios.print(pop());
       m_ios.print(' ');
