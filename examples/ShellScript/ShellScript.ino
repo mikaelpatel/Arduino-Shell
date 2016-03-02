@@ -18,12 +18,26 @@
  * @section Description
  * This Arduino sketch shows how to use the Shell library to
  * execute scripts.
+ *
+ * Direct script strings: 8,296/431 bytes
+ * Program memory strings: 8,346/393 bytes
+ * Difference: +50/-38 bytes
  */
 
 #include <Shell.h>
 
 // Shell 16 depth stack and 16 variables
 Shell<16,16> shell(Serial);
+
+// Script buffer
+#define USE_BUFFER
+#if defined(USE_BUFFER)
+const int BUF_MAX = 64;
+char buf[BUF_MAX];
+#define SCRIPT(s) strcpy_P(buf, PSTR(s))
+#else
+#define SCRIPT(s) (s)
+#endif
 
 void setup()
 {
@@ -38,10 +52,10 @@ void setup()
   //   dup output
   //   rot { dup high over delay dup low over delay } loop
   //   drop drop ;
-  shell.execute("{uOr{uHoDuLoD}ldd};\\blinks!");
+  shell.execute(SCRIPT("{uOr{uHoDuLoD}ldd};\\blinks!"));
 
   // 5 1000 13 blinks
-  shell.execute("5,1000,13\\blinks@x");
+  shell.execute(SCRIPT("5,1000,13\\blinks:"));
 
   // Turn off trace
   shell.trace(false);
@@ -55,10 +69,10 @@ void setup()
   //      over high dup delay over low delay
   //      true
   //   } while ;
-  shell.execute("{oUuO{oR{1000}{200}eoHuDoLDT}w};\\monitor!");
+  shell.execute(SCRIPT("{oUuO{oR{1000}{200}eoHuDoLDT}w};\\monitor!"));
 
   // 2 13 monitor
-  shell.execute("2,13\\monitor@x");
+  shell.execute(SCRIPT("2,13\\monitor:"));
 }
 
 void loop()
