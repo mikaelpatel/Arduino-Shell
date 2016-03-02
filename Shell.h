@@ -34,6 +34,7 @@ public:
    * @param[in] ios input output stream.
    */
   Shell(Stream& ios) :
+    m_dp(0),
     m_fp(m_stack + STACK_MAX),
     m_sp(m_stack + STACK_MAX),
     m_tos(0),
@@ -42,6 +43,7 @@ public:
     m_cycle(0),
     m_ios(ios)
   {
+    memset(m_dict, 0, sizeof(m_dict));
     memset(m_var, 0, sizeof(m_var));
   }
 
@@ -88,6 +90,15 @@ public:
   void tos(int val)
   {
     m_tos = val;
+  }
+
+  /**
+   * Set top of stack to given value.
+   * @param[in] val to set.
+   */
+  void tos(const char* val)
+  {
+    m_tos = (int) val;
   }
 
   /**
@@ -298,15 +309,6 @@ public:
       m_ios.print(pop());
       m_ios.print(' ');
       break;
-    case 'a': // block1 len -- block2 | allocate block
-      {
-	size_t len = (size_t) pop();
-	const char* src = (const char*) pop();
-	char* dest = (char*) malloc(len + 1);
-	strlcpy(dest, src, len);
-	push(dest);
-      }
-      break;
     case 'b': // xn..x1 n -- | drop n stack elements
       n = tos();
       if (depth() > n) {
@@ -314,9 +316,6 @@ public:
 	pop();
 	break;
       }
-    case 'c': // xn..x1 -- | clear
-      clear();
-      break;
     case 'd': // x -- | drop
       drop();
       break;
@@ -400,9 +399,6 @@ public:
       tos(*m_sp);
       *m_sp = val;
       break;
-    case 't': // -- | toggle trace mode
-      m_trace = !m_trace;
-      break;
     case 'u': // x -- x x | duplicate
       push(tos());
       break;
@@ -422,12 +418,12 @@ public:
     case 'y': // -- | yield
       yield();
       break;
-    case 'z': // -- | print stack contents
-      print();
-      break;
     case 'A': // pin -- sample | analogRead(pin)
       pin = tos();
       tos(analogRead(pin));
+      break;
+    case 'C': // xn..x1 -- | clear
+      clear();
       break;
     case 'D': // ms -- | delay()
       delay(pop());
@@ -466,6 +462,9 @@ public:
       pin = tos();
       tos(as_bool(digitalRead(pin)));
       break;
+    case 'S': // -- | print stack contents
+      print();
+      break;
     case 'T': // -- true | true
       push(-1);
       break;
@@ -476,6 +475,9 @@ public:
     case 'W': // value pin -- | digitalWrite(pin, value)
       pin = pop();
       digitalWrite(pin, pop());
+      break;
+    case 'Z': // -- | toggle trace mode
+      m_trace = !m_trace;
       break;
     default: // illegal operation code
       return (false);
@@ -563,11 +565,42 @@ public:
 	continue;
       case '}':
 	return (NULL);
-      case '\\': // block -- block len | copy script
+      case ';': // block1 -- block2 | copy script to heap
 	{
-	  const char* script = (const char*) tos();
-	  push(s - script - 1);
+	  const char* src = (const char*) tos();
+	  size_t len = s - src - 1;
+	  char* dest = (char*) malloc(len + 1);
+	  if (dest != NULL) {
+	    strlcpy(dest, src, len);
+	    tos(dest);
+	  }
+	  else tos(-1);
 	}
+	continue;
+      case '\\': // -- addr | lookup variable
+	{
+	  const char* name = s;
+	  size_t len = 0;
+	  int i;
+	  while (((c = *s++) != 0) && isalpha(c)) len++;
+	  if (len > 0) {
+	    for (i = 0; i != m_dp; i++)
+	      if (!strncmp(m_dict[i], name, len))
+		break;
+	    if (i == m_dp) {
+	      char* dest = (char*) malloc(len + 1);
+	      if (dest != NULL) {
+		strlcpy(dest, name, len + 1);
+		m_dict[i] = dest;
+		m_dp += 1;
+	      }
+	      else
+		i = -1;
+	    }
+	    push(i);
+	  }
+	}
+	s = s - 1;
 	continue;
       case '\'': // -- char | push character
 	c = *s;
@@ -636,7 +669,9 @@ public:
 
     // Check for trace mode and error print
     if (m_trace) {
+      size_t len = strlen(t) - 1;
       m_ios.print(t);
+      if (t[len] != '\n') m_ios.println();
       for (int i = 0, n = s - t; i < n; i++)
 	m_ios.print(' ');
       m_ios.println(F("^--?"));
@@ -658,6 +693,7 @@ public:
   }
 
 protected:
+  int m_dp;
   int* m_fp;
   int* m_sp;
   int m_tos;
@@ -665,6 +701,7 @@ protected:
   bool m_trace;
   unsigned m_cycle;
   Stream& m_ios;
+  char* m_dict[VAR_MAX];
   int m_var[VAR_MAX];
   int m_stack[STACK_MAX];
 

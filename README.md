@@ -65,6 +65,7 @@ File>Examples menu.
 Opcode | Parameters | Description | Forth
 -------|:-----------|:------------|:-----
 , | -- | no operation |
+; | block1 -- block2 | allocate block |
 ~ | x -- ~x | bitwise not | NOT
 @ | addr -- val | read variable | @
 ! | val addr -- | write variable | !
@@ -84,9 +85,7 @@ Opcode | Parameters | Description | Forth
 $ | x1..xn n -- x1..xn | n > 0: mark stack frame with n-elements |
 $ | x1..xn y1..ym n -- y1..ym | n < 0: remove stack frame with n-elements |
 _ | n -- addr | address of n-element in frame |
-a | block1 len -- block2 | allocate block |
 b | xn..x1 n -- | drop n stack elements |
-c | xn..x1 -- | clear | ABORT
 d | x -- | drop | DROP
 e | flag if-block else-block -- | execute block on flag | IF ELSE THEN
 f | block -- | free block |
@@ -103,14 +102,13 @@ p | xn..x1 n -- xn..x1 xn | pick | PICK
 q | x -- [x x] or 0 | duplicate if not zero | ?DUP
 r | x y z --- y z x | rotate | ROT
 s | x y -- y x | swap | SWAP
-t | -- | toggle trace mode |
 u | x -- x x | duplicate | DUP
 v | char -- | write character to output stream | EMIT
 w | block( -- flag) -- | execute block while flag is true | BEGIN UNTIL
 x | block -- | execute block | EXECUTE
 y | -- | yield for multi-tasking scheduler |
-z | -- | print stack contents | .S
 A | pin -- sample | analogRead(pin) |
+C | xn..x1 -- | clear | ABORT
 D | ms -- | delay |
 F | -- false | false | 0
 H | pin -- | digitalWrite(pin, HIGH) |
@@ -122,13 +120,16 @@ N | -- | no operation |
 O | pin -- | pinMode(pin, OUTPUT) |
 P | value pin -- | analogWrite(pin, value) |
 R | pin --  bool | digitalRead(pin) |
+S | -- | print stack contents | .S
 T | -- true | true | -1
 U | pin -- | pinMode(pin, INPUT_PULLUP) |
 W | value pin -- | digitalWrite(pin, value) |
+Z | -- | toggle trace mode |
 
 ## Special forms
 
-The shell script language allows several special forms and instructions.
+The shell script language allows several special forms and
+instructions for literal values and control structures.
 
 ### Boolean
 
@@ -169,34 +170,33 @@ Quote (apostrophe) a character to push it on the parameter stack.
 
 ### Variables
 
-The Shell is contains a paramter stack and a variable table. The size
-of the stack (STACK_MAX) and variable table (VAR_MAX) are given as
-template parameters. The variable(0) is assigned and accessed below
-using the operators `!` and `@`.
+Variables are defined with `\name`. The operator will return the
+address of the variable. It may be accessed using the operators `!`
+and `@`.
 ```
-42,0!
-0@
+42\x!
+\x@
 ```
-The instructions to read and write a variable use an address/index
-within the variable block (0..VAR_MAX-1).
 
 ### Blocks
 
 Code blocks have the following form `{ code-block }`. They begin with left
 curley bracket and end with a right curley bracket. When the script is
-executed the address of the block is pushed on the parameter stack.
-
-The code block suffix `\` will push the length of the block in the
-parameter stack. This can be used with _a_ to allocate and copy the
-block to the heap. The instruction _f_ may be used to free the
-code block.
-
-A code block can be copied and assigned to a variable to create script
-function.
+executed the address of the block is pushed on the parameter
+stack. The block can be executed with the instruction _x_.
 ```
-{ code-block }\a0!
-0@x
-0@f
+{ code-block }x
+```
+The code block suffix `;` will copy the block to the heap. This can be
+used to create a named function by assigning the block to a variable.
+```
+{ code-block };\fun!
+\fun@x
+\fun@f
+```
+The instruction _f_ may be used to free the code block.
+```
+\fun@f
 ```
 
 ### Control Structures
@@ -213,7 +213,7 @@ n { loop-block } loop
 
 { while-block bool } while
 ```
-The instructions are _i_,_e_,_l_ and _w_.
+The instructions are _i_, _e_, _l_ and _w_.
 
 ### Output Strings
 

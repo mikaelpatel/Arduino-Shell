@@ -38,13 +38,10 @@ void setup()
   //   dup output
   //   rot { dup high over delay dup low over delay } loop
   //   drop drop ;
-  const char* blinks = "uOr{uHoDuLoD}ldd";
+  shell.execute("{uOr{uHoDuLoD}ldd};\\blinks!");
 
-  Serial.println(F("5 1000 13 blinks"));
-  shell.push(5);
-  shell.push(1000);
-  shell.push(13);
-  shell.execute(blinks);
+  // 5 1000 13 blinks
+  shell.execute("5,1000,13\\blinks@x");
 
   // Turn off trace
   shell.trace(false);
@@ -58,12 +55,10 @@ void setup()
   //      over high dup delay over low delay
   //      true
   //   } while ;
-  const char* monitor = "oUuO{oR{1000}{200}eoHuDoLDT}w";
+  shell.execute("{oUuO{oR{1000}{200}eoHuDoLDT}w};\\monitor!");
 
-  Serial.println(F("2 13 monitor"));
-  shell.push(2);
-  shell.push(13);
-  shell.execute(monitor);
+  // 2 13 monitor
+  shell.execute("2,13\\monitor@x");
 }
 
 void loop()
