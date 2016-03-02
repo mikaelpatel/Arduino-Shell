@@ -41,6 +41,7 @@ char buf[BUF_MAX];
 
 void setup()
 {
+  memcpy_P(buf, F("\x00\x10\xFF\xCA\x00\x00\xA2\x7D"), 8);
   Serial.begin(57600);
   while (!Serial);
   Serial.println(F("ShellScript: started"));

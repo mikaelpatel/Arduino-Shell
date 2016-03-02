@@ -380,8 +380,8 @@ Calculate factorial number of given parameter.
 ```
 Script:
 ```
-{1s{u0>{so*s1-T}{dF}e}w}\a0!
-5,0@x.
+{1s{u0>{so*s1-T}{dF}e}w};\fac!
+5\fac:.
 ```
 
 ### Range check function
@@ -397,10 +397,10 @@ Check that a given parameter is within a range low to high.
 ```
 Script:
 ```
-{rsos>sr<|~}\a0!
-10,5,100,0@x.
--10,5,100,0@x.
-110,5,100,0@x.
+{rsos>sr<|~};\within!
+10,5,100\within:
+-10,5,100\within:
+110,5,100\within:
 ```
 
 ### Stack vector sum
