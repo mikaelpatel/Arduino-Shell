@@ -65,16 +65,16 @@ File>Examples menu.
 Opcode | Parameters | Description | Forth
 -------|:-----------|:------------|:-----
 , | -- | no operation |
-: | addr -- | execute function |
-; | block1 -- block2 | allocate block |
-~ | x -- ~x | bitwise not | NOT
 @ | addr -- val | read variable | @
 ! | val addr -- | write variable | !
+: | addr -- | execute variable (function) |
 ? | addr -- | print variable | ?
+; | block1 -- block2 | allocate block |
 # | x y -- x!=y | not equal |
 = | x y -- x==y | equal | =
 < | x y -- x<y | less than | <
 > | x y -- x>y | greater than | >
+~ | x -- ~x | bitwise not | NOT
 & | x y -- x&y | bitwise and | AND
 &#124; | x y -- x&#124;y | bitwise or | OR
 ^ | x y -- x^y | bitwise xor | XOR
