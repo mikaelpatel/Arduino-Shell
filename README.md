@@ -433,8 +433,8 @@ Check that a given parameter is within a range low to high. Use a
 stack frame for the three parameters.
 ````
 : within { x low high -- bool }
-  x @ low @ >
-  x @ high @ <
+  x @ high @ >
+  x @ low @ <
   or not ;
 
 10 5 100 within .
