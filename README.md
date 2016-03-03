@@ -9,10 +9,10 @@ order.
 
 ![screenshot](https://dl.dropboxusercontent.com/u/993383/Cosa/screenshots/Screenshot%20from%202016-02-29%2011%3A00%3A13.png)
 
-The help debugging and performance tune scripts the shell has built-in
-instruction level trace. It prints the instruction cycle count, script
-address, opcode, stack depth and contents). Typical output in the
-Serial Monitor above.
+The shell has built-in instruction level trace to aid script debugging and
+performance tuning. It prints the instruction cycle count, script
+address, opcode (or full operation name), stack depth and
+contents. Typical output in the Serial Monitor above.
 
 The classical Arduino Blink sketch in the shell script language is
 ```
@@ -152,27 +152,27 @@ Integer numbers (decimal, binary and hexadecimal) may be used directly
 in scripts. When the script is executed the value of the number is
 pushed on the parameter stack. The statement:
 ```
-println((3 + (-5)) * 6);
+ println((3 + (-5)) * 6);
 ```
 may be written as the following script expression:
 ```
-3 -5 + 6 * . m
+ 3 -5 + 6 * . m
 ```
 and compressed to:
 ```
-3,-5+6*.m
+ 3,-5+6*.m
 ```
 Binary literal numbers are prefixed with `0b`, and hexadecimal with
 `0x` as in C.
 ```
-10 . 0b10 . 0x10 .
+ 10 . 0b10 . 0x10 .
 ```
 
 ### Literal Characters
 
 Quote (apostrophe) a character to push it on the parameter stack.
 ```
-'A .
+ 'A .
 ```
 
 ### Variables
@@ -181,16 +181,16 @@ Variables are defined with `\name`. The operator will return the
 address of the variable. It may be accessed using the operators fetch
 `@` and store `!`.
 ```
-42\x!
-\x@
+ 42\x!
+ \x@
 ```
 The operator `?` can be used to print the value of a variable.
 ```
-\x?
+ \x?
 ```
 It is a short form for:
 ```
-\x@.
+ \x@.
 ```
 
 ### Blocks
@@ -200,21 +200,21 @@ curley bracket and end with a right curley bracket. When the script is
 executed the address of the block is pushed on the parameter
 stack. The block can be executed with the instruction _x_.
 ```
-{ code-block } x
+ { code-block } x
 ```
 The code block suffix `;` will copy the block to the heap. This can be
 used to create a named function by assigning the block to a variable.
 ```
-{ code-block };\fun!
-\fun@x
+ { code-block };\fun!
+ \fun@x
 ```
 The short form for executing a function is `:`.
 ```
-\fun:
+ \fun:
 ```
 The instruction _f_ may be used to free the code block.
 ```
-\fun@f
+ \fun@f
 ```
 
 ### Control Structures
@@ -224,12 +224,12 @@ Reverse Polish Notation (RPN). The blocks are pushed on the stack
 before the control structure instruction. Below are the control
 structures with full instruction names.
 ```
-bool { if-block } if
-bool { if-block } { else-block } ifelse
+ bool { if-block } if
+ bool { if-block } { else-block } ifelse
 
-n { loop-block } loop
+ n { loop-block } loop
 
-{ while-block bool } while
+ { while-block bool } while
 ```
 The instructions are _i_, _e_, _l_ and _w_.
 
@@ -257,7 +257,7 @@ fetch `@` and store `!`.
 
 Swap could be defined as:
 ```
-2$2_@1_@-2$
+ 2$2_@1_@-2$
 ```
 which will mark a frame with two arguments, copy the second and then
 the first argument, and last remove the frame, leaving the two return
@@ -277,31 +277,31 @@ operation code.
 
 Turn board LED, pin 13, on/off with 1000 ms period.
 ```
-13 output
-{
-  13 high 1000 delay
-  13 low 1000 delay
-  true
-} while
+ 13 output
+ {
+   13 high 1000 delay
+   13 low 1000 delay
+   true
+ } while
 ```
 Script:
 ```
-13O{13H1000D13L1000DT}w
+ 13O{13H1000D13L1000DT}w
 ```
 
 ### Blink with digitalToggle
 
 Toggle board LED, pin 13, on/off with 1000 ms period.
 ```
-13 output
-{
-  13 digitalToggle 1000 delay
-  true
-} while
+ 13 output
+ {
+   13 digitalToggle 1000 delay
+   true
+ } while
 ```
 Script:
 ```
-13O{13X1000DT}w
+ 13O{13X1000DT}w
 ```
 
 ### Blink without delay
@@ -309,32 +309,32 @@ Script:
 Turn board LED, pin 13, on/off without using delay. Use time-out
 instruction.
 ```
-13 output
-{
-  1000 \timer ?timeout
-  { 13 digitalToggle } if
-  true
-} while
+ 13 output
+ {
+   1000 \timer ?timeout
+   { 13 digitalToggle } if
+   true
+ } while
 ```
 Script:
 ```
-13O{1000\timer,t{13X}iT}w
+ 13O{1000\timer,t{13X}iT}w
 ```
 
 ### Blink with on/off button
 
 Turn board LED, pin 13, on/off with 1000 ms period if pin 2 is low.
 ```
-2 inputPullup
-13 output
-{
-  2 digitalRead not
-  {
-    13 high 1000 delay
-    13 low 1000 delay
-  } if
-  true
-} while
+ 2 inputPullup
+ 13 output
+ {
+   2 digitalRead not
+   {
+     13 high 1000 delay
+     13 low 1000 delay
+   } if
+   true
+ } while
 ```
 Script:
 ```
@@ -345,86 +345,86 @@ Script:
 
 Read analog pins and print value in format "An = value".
 ```
-0 5 { ." A" dup . ." =" dup analogRead . cr 1+ } loop drop
+ 0 5 { ." A" dup . ." =" dup analogRead . cr 1+ } loop drop
 ```
 Script:
 ```
-0,5{(A)u.(= )uA.m1+}ld
+ 0,5{(A)u.(= )uA.m1+}ld
 ```
 ### Continously Read Analog Pins
 
 Read analog pins and print value continuously with 1000 ms delay.
 ```
-{
-  5 dup
-  {
-    dup analogRead . 1-
-  } loop
-  cr drop
-  1000 delay
-  true
-} while
+ {
+   5 dup
+   {
+     dup analogRead . 1-
+   } loop
+   cr drop
+   1000 delay
+   true
+ } while
 ```
 Script:
 ```
-{5u{uA.1-}lmd1000DT}w
+ {5u{uA.1-}lmd1000DT}w
 ```
 
 ### Termostat
 
 Read analog pin 0, turn board LED on if value is within 100..200 else off.
 ```
-13 output
-{
-  0 analogRead
-  dup 100 < swap 200 > or not
-  13 digitalWrite
-  true
-} while
+ 13 output
+ {
+   0 analogRead
+   dup 100 < swap 200 > or not
+   13 digitalWrite
+   true
+ } while
 ```
 Script:
 ```
-13O{0Au100<s200>|~13WT}w
+ 13O{0Au100<s200>|~13WT}w
 ```
 
 ### Iterative Factorial
 
 Calculate factorial number of given parameter.
 ```
-: fac ( n -- n! )
-  1 swap
-  {
-    dup 0>
-      { swap over * swap 1- true }
-      { drop false }
-    ifelse
-  } while ;
+ : fac ( n -- n! )
+   1 swap
+   {
+     dup 0>
+       { swap over * swap 1- true }
+       { drop false }
+     ifelse
+   } while ;
 
-5 fac .
+ 5 fac .
 ```
 Script:
 ```
-{1s{u0>{so*s1-T}{dF}e}w};\fac!
-5\fac:.
+ {1s{u0>{so*s1-T}{dF}e}w};\fac!
+ 5\fac:.
 ```
 
 ### Range check function
 
 Check that a given parameter is within a range low to high.
 ````
-: within ( x low high -- bool )
-  rot swap over swap > swap rot < or not ;
+ : within ( x low high -- bool )
+   rot swap over swap > swap rot < or not ;
 
-10 5 100 within .
--10 5 100 within .
-110 5 100 within .
+ 10 5 100 within .
+ -10 5 100 within .
+ 110 5 100 within .
 ```
 Script:
 ```
-{rsos>sr<|~};\within!
-10,5,100\within:
--10,5,100\within:
-110,5,100\within:
+ {rsos>sr<|~};\within!
+ 10,5,100\within:
+ -10,5,100\within:
+ 110,5,100\within:
 ```
 
 ### Range check function with stack frame
@@ -432,21 +432,21 @@ Script:
 Check that a given parameter is within a range low to high. Use a
 stack frame for the three parameters.
 ````
-: within { x low high -- bool }
-  x @ high @ >
-  x @ low @ <
-  or not ;
+ : within { x low high -- bool }
+   x @ high @ >
+   x @ low @ <
+   or not ;
 
-10 5 100 within .
--10 5 100 within .
-110 5 100 within .
+ 10 5 100 within .
+ -10 5 100 within .
+ 110 5 100 within .
 ```
 Script:
 ```
-{3$1_@3_@>1_@2_@<|~-3$};\within!
-10,5,100\within:
--10,5,100\within:
-110,5,100\within:
+ {3$1_@3_@>1_@2_@<|~-3$};\within!
+ 10,5,100\within:
+ -10,5,100\within:
+ 110,5,100\within:
 ```
 
 ### Stack vector sum
@@ -454,10 +454,10 @@ Script:
 Sum a vector of integers on stack. Use that stack marker to get number
 of elements in vector.
 ```
-[ 1 2 3 ] 0 swap { + } loop
+ [ 1 2 3 ] 0 swap { + } loop
 ```
 Script:
 ```
-[1,2,3]0s{+}l
+ [1,2,3]0s{+}l
 ```
 
