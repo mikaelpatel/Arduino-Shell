@@ -295,7 +295,7 @@ Toggle board LED, pin 13, on/off with 1000 ms period.
 ```
 13 output
 {
-  13 toggle 1000 delay
+  13 digitalToggle 1000 delay
   true
 } while
 ```
@@ -311,7 +311,7 @@ instruction.
 ```
 13 output
 {
-  1000 \timer timeout
+  1000 \timer ?timeout
   { 13 digitalToggle } if
   true
 } while
