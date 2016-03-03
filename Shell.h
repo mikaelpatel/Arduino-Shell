@@ -25,9 +25,9 @@
  * written directly.
  * @param[in] STACK_MAX max stack depth.
  * @param[in] VAR_MAX max number of variables.
- * @param[in] OP_NAME trace with operation name (default true).
+ * @param[in] FULL_OP_NAMES trace with operation name (default true).
  */
-template<int STACK_MAX, int VAR_MAX, bool OP_NAME = true>
+template<int STACK_MAX, int VAR_MAX, bool FULL_OP_NAMES = true>
 class Shell {
 public:
   /**
@@ -769,7 +769,7 @@ protected:
    */
    const class __FlashStringHelper* as_fstr(char op)
    {
-     if (!OP_NAME) return (NULL);
+     if (!FULL_OP_NAMES) return (NULL);
      switch (op) {
      case 'b': return (F("ndrop"));
      case 'd': return (F("drop"));
