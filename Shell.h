@@ -60,7 +60,7 @@ public:
    * Get trace mode.
    * @return trace mode.
    */
-  bool trace()
+  bool trace() const
   {
     return (m_trace);
   }
@@ -180,7 +180,7 @@ public:
   }
 
   /**
-   * Print parameter stack contents.
+   * Print parameter stack contents in format: n: xn..x1
    */
   void print()
   {
@@ -720,17 +720,17 @@ public:
 
 protected:
   static const char TRAP_CHAR = '`';
-  int m_dp;
-  int* m_fp;
-  int* m_sp;
-  int m_tos;
-  int m_marker;
-  bool m_trace;
-  unsigned m_cycle;
-  Stream& m_ios;
-  char* m_dict[VAR_MAX];
-  int m_var[VAR_MAX];
-  int m_stack[STACK_MAX];
+  int m_dp;			//!< Next free dictionary entry.
+  int* m_fp;			//!< Frame pointer.
+  int* m_sp;			//!< Stack pointer.
+  int m_tos;			//!< Top of stack register.
+  int m_marker;			//!< Stack marker.
+  bool m_trace;			//!< Trace mode.
+  unsigned m_cycle;		//!< Cycle counter.
+  Stream& m_ios;		//!< Input/output Stream.
+  char* m_dict[VAR_MAX];	//!< Dictionary.
+  int m_var[VAR_MAX];		//!< Variable table.
+  int m_stack[STACK_MAX];	//!< Parameter stack.
 
   /**
    * Map given integer value to boolean (true(-1) and false(0)).

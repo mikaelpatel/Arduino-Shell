@@ -1,18 +1,20 @@
 # Arduino-Shell
 
-This library provides a forth style shell for Arduino sketches. Shell
-uses a byte token threaded instruction set. The tokens, characters,
-are chosen so that it is possible to write small scripts directly. A
-token compiler is not required. As forth scripts are in Reverse Polish
-Notation (RPN).
+This library provides a forth/postscript style shell for Arduino
+sketches. Shell uses a byte token threaded instruction set. The
+tokens, characters, are chosen so that it is possible to write small
+scripts directly without a token compiler. As forth scripts are
+written in Reverse Polish Notation (RPN), and executed in the given
+order.
 
 ![screenshot](https://dl.dropboxusercontent.com/u/993383/Cosa/screenshots/Screenshot%20from%202016-02-29%2011%3A00%3A13.png)
 
-The shell has built-in instruction level trace. It prints the
-instruction cycle count, script address, opcode, stack depth and
-contents). Typical output in the Serial Monitor above.
+The help debugging and performance tune scripts the shell has built-in
+instruction level trace. It prints the instruction cycle count, script
+address, opcode, stack depth and contents). Typical output in the
+Serial Monitor above.
 
-The classical blink sketch in the shell script language is
+The classical Arduino Blink sketch in the shell script language is
 ```
  13O{13H1000D13L1000DT}w
 ```
@@ -31,25 +33,25 @@ And with full instruction names and some formatting:
 ```
 A further compressed version (shorter):
 ```
- 13O{1000,13ooHDLDT}w
-
  13 output
  {
    1000 13 over over high delay
    low delay
    true
  } while
+
+ 13O{1000,13ooHDLDT}w
 ```
 And a slightly faster version:
 ```
- 1000,13uO{ooHDooLDT}w
-
  1000 13 dup output
  {
    over over high delay
    over over low delay
    true
  } while
+
+ 1000,13uO{ooHDooLDT}w
 ```
 
 ## Install
@@ -132,14 +134,15 @@ Z | -- | toggle trace mode |
 
 ## Special forms
 
-The shell script language allows several special forms and
-instructions for literal values and control structures.
+The shell script language allows several special forms such as literal
+values, blocks and control structures.
 
 ### Boolean
 
 Boolean values are true(-1) and false(0). Mapping to boolean may be
-done with testing non-zero (0#). Boolean value can be directly
-combined with bitwise operations.
+done with testing non-zero (0#). Defining true(-1) allows Boolean
+values and relation operations to be directly combined with bitwise
+operations.
 
 The instructions to push the boolean values are _T_ and _F_.
 
@@ -147,17 +150,17 @@ The instructions to push the boolean values are _T_ and _F_.
 
 Integer numbers (decimal, binary and hexadecimal) may be used directly
 in scripts. When the script is executed the value of the number is
-pushed on the parameter stack. The statement;
+pushed on the parameter stack. The statement:
 ```
-print((3 + (-5)) * 6)
+println((3 + (-5)) * 6);
 ```
 may be written as the following script expression:
 ```
-3 -5 + 6 * .
+3 -5 + 6 * . m
 ```
 and compressed to:
 ```
-3,-5+6*.
+3,-5+6*.m
 ```
 Binary literal numbers are prefixed with `0b`, and hexadecimal with
 `0x` as in C.
@@ -175,8 +178,8 @@ Quote (apostrophe) a character to push it on the parameter stack.
 ### Variables
 
 Variables are defined with `\name`. The operator will return the
-address of the variable. It may be accessed using the operators `!`
-and `@`.
+address of the variable. It may be accessed using the operators fetch
+`@` and store `!`.
 ```
 42\x!
 \x@
@@ -184,6 +187,10 @@ and `@`.
 The operator `?` can be used to print the value of a variable.
 ```
 \x?
+```
+It is a short form for:
+```
+\x@.
 ```
 
 ### Blocks
@@ -193,7 +200,7 @@ curley bracket and end with a right curley bracket. When the script is
 executed the address of the block is pushed on the parameter
 stack. The block can be executed with the instruction _x_.
 ```
-{ code-block }x
+{ code-block } x
 ```
 The code block suffix `;` will copy the block to the heap. This can be
 used to create a named function by assigning the block to a variable.
@@ -201,7 +208,7 @@ used to create a named function by assigning the block to a variable.
 { code-block };\fun!
 \fun@x
 ```
-The short form for execute a function is `:`.
+The short form for executing a function is `:`.
 ```
 \fun:
 ```
@@ -213,7 +220,7 @@ The instruction _f_ may be used to free the code block.
 ### Control Structures
 
 Control structures follow the same format at PostScript. They are also
-Reverse Polish Notation (RPN). The block(s) is/are pushed on the stack
+Reverse Polish Notation (RPN). The blocks are pushed on the stack
 before the control structure instruction. Below are the control
 structures with full instruction names.
 ```
@@ -241,18 +248,20 @@ parameter stack.
 ### Frame Marker
 
 A frame marker has the following form `n$ ... -n$` where _n_ is the
-number of parameters in the frame. Positive _n_ marks the frame and
-negative _n_ removes the frame stack elements leaving any return
-values. Elements within the frame can be accessed with `m_` where _m_
-is the element index (1..n). The element address is pushed on the
-parameter stack.
+number of elements (parameters and locals) in the frame. Positive _n_
+marks the frame and negative _n_ removes the frame stack elements
+leaving any return values. Elements within the frame can be accessed
+with `m_` where _m_ is the element index (1..n). The element address
+is pushed on the parameter stack and the value may be accessed with
+fetch `@` and store `!`.
 
 Swap could be defined as:
 ```
 2$2_@1_@-2$
 ```
 which will mark a frame with two arguments, copy the second and then
-the first argument, and last remove the frame, leaving the two values.
+the first argument, and last remove the frame, leaving the two return
+values.
 
 ### Extended Instructions
 
@@ -294,7 +303,7 @@ instruction.
 ```
 Script:
 ```
-13O{1000,\timer,t{13X}iT}w
+13O{1000\timer,t{13X}iT}w
 ```
 
 ### Read Analog Pins
