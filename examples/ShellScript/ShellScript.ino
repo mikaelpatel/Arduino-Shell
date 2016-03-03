@@ -19,9 +19,9 @@
  * This Arduino sketch shows how to use the Shell library to
  * execute scripts.
  *
- * Direct script strings: 8,296/431 bytes
- * Program memory strings: 8,346/393 bytes
- * Difference: +50/-38 bytes
+ * Direct script strings: 8,912/545 bytes
+ * Program memory strings: 8,960/507 bytes
+ * Difference: +48/-38 bytes
  */
 
 #include <Shell.h>
@@ -41,7 +41,6 @@ char buf[BUF_MAX];
 
 void setup()
 {
-  memcpy_P(buf, F("\x00\x10\xFF\xCA\x00\x00\xA2\x7D"), 8);
   Serial.begin(57600);
   while (!Serial);
   Serial.println(F("ShellScript: started"));
