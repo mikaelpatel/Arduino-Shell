@@ -412,16 +412,6 @@ public:
       tos(*m_sp);
       *m_sp = val;
       break;
-    case 't': // period addr -- bool | time-out
-      addr = pop();
-      val = read(addr);
-      n = tos();
-      if ((((unsigned) millis() & 0xffff) - ((unsigned) val)) >= ((unsigned) n)) {
-	tos(-1);
-	write(addr, millis());
-      }
-      else tos(0);
-      break;
     case 'u': // x -- x x | duplicate
       push(tos());
       break;
@@ -450,6 +440,16 @@ public:
       break;
     case 'D': // ms -- | delay()
       delay(pop());
+      break;
+    case 'E': // period addr -- bool | time-out
+      addr = pop();
+      val = read(addr);
+      n = tos();
+      if ((((unsigned) millis() & 0xffff) - ((unsigned) val)) >= ((unsigned) n)) {
+	tos(-1);
+	write(addr, millis());
+      }
+      else tos(0);
       break;
     case 'F': // -- false | false
       push(0);
@@ -584,8 +584,10 @@ public:
 	  m_ios.print(c);
 	else
 	  m_ios.print(str);
-	m_ios.print(':');
-	print();
+	if (c != '\\') {
+	  m_ios.print(':');
+	  print();
+	}
       }
 
       // Check for special forms
@@ -627,6 +629,11 @@ public:
 	      }
 	      else
 		i = -1;
+	    }
+	    if (i != -1) {
+	      m_ios.print(m_dict[i]);
+	      m_ios.print(':');
+	      print();
 	    }
 	    push(i);
 	  }
@@ -788,7 +795,6 @@ protected:
      case 'q': return (F("?dup"));
      case 'r': return (F("rot"));
      case 's': return (F("swap"));
-     case 't': return (F("?timeout"));
      case 'u': return (F("dup"));
      case 'v': return (F("emit"));
      case 'w': return (F("while"));
@@ -797,13 +803,14 @@ protected:
      case 'A': return (F("analogRead"));
      case 'C': return (F("clear"));
      case 'D': return (F("delay"));
+     case 'E': return (F("?expired"));
      case 'F': return (F("false"));
      case 'H': return (F("high"));
      case 'I': return (F("input"));
      case 'K': return (F("key"));
      case 'L': return (F("low"));
      case 'M': return (F("millis"));
-     case 'N': return (F("nl"));
+     case 'N': return (F(""));
      case 'O': return (F("output"));
      case 'P': return (F("analogWrite"));
      case 'R': return (F("digitalRead"));

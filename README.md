@@ -106,7 +106,6 @@ p | xn..x1 n -- xn..x1 xn | pick | PICK
 q | x -- [x x] or 0 | duplicate if not zero | ?DUP
 r | x y z --- y z x | rotate | ROT
 s | x y -- y x | swap | SWAP
-t | period addr -- bool | timeout variable check |
 u | x -- x x | duplicate | DUP
 v | char -- | write character to output stream | EMIT
 w | block( -- flag) -- | execute block while flag is true | BEGIN UNTIL
@@ -115,6 +114,7 @@ y | -- | yield for multi-tasking scheduler |
 A | pin -- sample | analogRead(pin) |
 C | xn..x1 -- | clear | ABORT
 D | ms -- | delay |
+E | period addr -- bool | check if timer variable has expired |
 F | -- false | false | 0
 H | pin -- | digitalWrite(pin, HIGH) |
 I | pin -- | pinMode(pin, INPUT) |
@@ -306,19 +306,19 @@ Script:
 
 ### Blink without delay
 
-Turn board LED, pin 13, on/off without using delay. Use time-out
+Turn board LED, pin 13, on/off without using delay. Use timer expired
 instruction.
 ```
  13 output
  {
-   1000 \timer ?timeout
+   1000 \timer ?expired
    { 13 digitalToggle } if
    true
  } while
 ```
 Script:
 ```
- 13O{1000\timer,t{13X}iT}w
+ 13O{1000\timer,E{13X}iT}w
 ```
 
 ### Blink with on/off button
