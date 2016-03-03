@@ -289,6 +289,21 @@ Script:
 13O{13H1000D13L1000DT}w
 ```
 
+### Blink with digitalToggle
+
+Toggle board LED, pin 13, on/off with 1000 ms period.
+```
+13 output
+{
+  13 toggle 1000 delay
+  true
+} while
+```
+Script:
+```
+13O{13X1000DT}w
+```
+
 ### Blink without delay
 
 Turn board LED, pin 13, on/off without using delay. Use time-out
@@ -304,6 +319,26 @@ instruction.
 Script:
 ```
 13O{1000\timer,t{13X}iT}w
+```
+
+### Blink with on/off button
+
+Turn board LED, pin 13, on/off with 1000 ms period if pin 2 is low.
+```
+2 inputPullup
+13 output
+{
+  2 digitalRead not
+  {
+    13 high 1000 delay
+    13 low 1000 delay
+  } if
+  true
+} while
+```
+Script:
+```
+2U13O{2R~{13H1000D13L1000D}iT}w
 ```
 
 ### Read Analog Pins
@@ -352,26 +387,6 @@ Script:
 13O{0Au100<s200>|~13WT}w
 ```
 
-### Blink with on/off button
-
-Turn board LED, pin 13, on/off with 1000 ms period if pin 2 is low.
-```
-2 inputPullup
-13 output
-{
-  2 digitalRead not
-  {
-    13 high 1000 delay
-    13 low 1000 delay
-  } if
-  true
-} while
-```
-Script:
-```
-2U13O{2R~{13H1000D13L1000D}iT}w
-```
-
 ### Iterative Factorial
 
 Calculate factorial number of given parameter.
@@ -412,12 +427,34 @@ Script:
 110,5,100\within:
 ```
 
+### Range check function with stack frame
+
+Check that a given parameter is within a range low to high. Use a
+stack frame for the three parameters.
+````
+: within { x low high -- bool }
+  x @ low @ >
+  x @ high @ <
+  or not ;
+
+10 5 100 within .
+-10 5 100 within .
+110 5 100 within .
+```
+Script:
+```
+{3$1_@3_@>1_@2_@<|~-3$};\within!
+10,5,100\within:
+-10,5,100\within:
+110,5,100\within:
+```
+
 ### Stack vector sum
 
-Sum a vector of integers on stack. Use that stack marker to get number
+Sum a vector of analog pin reads on stack. Use that stack marker to get number
 of elements in vector.
 ```
-[ 1 2 3 ] 0 swap { + } loop
+[ 5{0A}l ] 0 swap { + } loop
 ```
 Script:
 ```
