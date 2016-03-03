@@ -451,10 +451,10 @@ Script:
 
 ### Stack vector sum
 
-Sum a vector of analog pin reads on stack. Use that stack marker to get number
+Sum a vector of integers on stack. Use that stack marker to get number
 of elements in vector.
 ```
-[ 5{0A}l ] 0 swap { + } loop
+[ 1 2 3 ] 0 swap { + } loop
 ```
 Script:
 ```
