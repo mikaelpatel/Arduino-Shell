@@ -25,8 +25,9 @@
  * written directly.
  * @param[in] STACK_MAX max stack depth.
  * @param[in] VAR_MAX max number of variables.
+ * @param[in] OP_NAME trace with operation name (default true).
  */
-template<int STACK_MAX, int VAR_MAX>
+template<int STACK_MAX, int VAR_MAX, bool OP_NAME = true>
 class Shell {
 public:
   /**
@@ -574,11 +575,15 @@ public:
 
       // Check for trace mode
       if (m_trace) {
+	const class __FlashStringHelper* str = as_fstr(c);
 	m_ios.print(++m_cycle);
 	m_ios.print(':');
 	m_ios.print((int) s - 1);
 	m_ios.print(':');
-	m_ios.print(c);
+	if (str == NULL)
+	  m_ios.print(c);
+	else
+	  m_ios.print(str);
 	m_ios.print(':');
 	print();
       }
@@ -756,6 +761,62 @@ protected:
       return (c >= 'a' && c <= 'f');
     return (c >= '0' && c <= '9');
   }
+
+  /**
+   * Return full operation code name.
+   * @param[in] op operation code (character).
+   * @return program memory string or NULL.
+   */
+   const class __FlashStringHelper* as_fstr(char op)
+   {
+     if (!OP_NAME) return (NULL);
+     switch (op) {
+     case 'b': return (F("ndrop"));
+     case 'd': return (F("drop"));
+     case 'e': return (F("ifelse"));
+     case 'f': return (F("free"));
+     case 'g': return (F("roll"));
+     case 'h': return (F("*/"));
+     case 'i': return (F("if"));
+     case 'j': return (F("depth"));
+     case 'k': return (F("key"));
+     case 'l': return (F("loop"));
+     case 'm': return (F("cr"));
+     case 'n': return (F("negate"));
+     case 'o': return (F("over"));
+     case 'p': return (F("pick"));
+     case 'q': return (F("?dup"));
+     case 'r': return (F("rot"));
+     case 's': return (F("swap"));
+     case 't': return (F("timeout"));
+     case 'u': return (F("dup"));
+     case 'v': return (F("emit"));
+     case 'w': return (F("while"));
+     case 'x': return (F("execute"));
+     case 'y': return (F("yield"));
+     case 'A': return (F("analogRead"));
+     case 'C': return (F("clear"));
+     case 'D': return (F("delay"));
+     case 'F': return (F("false"));
+     case 'H': return (F("high"));
+     case 'I': return (F("inputMode"));
+     case 'K': return (F("key"));
+     case 'L': return (F("low"));
+     case 'M': return (F("millis"));
+     case 'N': return (F("nl"));
+     case 'O': return (F("outputMode"));
+     case 'P': return (F("analogWrite"));
+     case 'R': return (F("digitalRead"));
+     case 'S': return (F(".s"));
+     case 'T': return (F("true"));
+     case 'U': return (F("inputPullupMode"));
+     case 'W': return (F("digitalWrite"));
+     case 'X': return (F("digitalToggle"));
+     case 'Z': return (F("toggleTraceMode"));
+     default:
+       return (NULL);
+     }
+   }
 };
 
 #endif

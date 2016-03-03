@@ -58,9 +58,6 @@ void setup()
   // 5 1000 13 blinks
   shell.execute(SCRIPT("5,1000,13\\blinks:"));
 
-  // Turn off trace
-  shell.trace(false);
-
   // : monitor ( buttonPin ledPin -- )
   //   over inputPullup
   //   dup output
