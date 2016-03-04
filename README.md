@@ -412,13 +412,13 @@ Script:
 Calculate factorial number of given parameter.
 ```
  : fac ( n -- n! )
-   ?dup 0> { dup 1- fac * } { 1 } ifelse ;
+   dup 0> { dup 1- fac * } { drop 1 } ifelse ;
 
  5 fac .
 ```
 Script:
 ```
- {q0>{u1-`fac:*}{1}e};`fac!
+ {u0>{u1-`fac:*}{1}e};`fac!
  5`fac.
 ```
 
