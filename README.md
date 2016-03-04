@@ -407,6 +407,21 @@ Script:
  5`fac:.
 ```
 
+### Recursive Factorial
+
+Calculate factorial number of given parameter.
+```
+ : fac ( n -- n! )
+   ?dup 0> { dup 1- fac * } { 1 } ifelse ;
+
+ 5 fac .
+```
+Script:
+```
+ {q0>{u1-`fac:*}{1}e};`fac!
+ 5`fac.
+```
+
 ### Range check function
 
 Check that a given parameter is within a range low to high.
