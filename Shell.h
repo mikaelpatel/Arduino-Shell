@@ -23,11 +23,11 @@
  * Script Shell with stack machine instruction set. Instructions are
  * printable characters so that command lines and scripts can be
  * written directly.
- * @param[in] STACK_MAX max stack depth.
- * @param[in] VAR_MAX max number of variables.
+ * @param[in] STACK_MAX max stack depth (default 16).
+ * @param[in] VAR_MAX max number of variables (default 32).
  * @param[in] FULL_OP_NAMES trace with operation name (default true).
  */
-template<int STACK_MAX, int VAR_MAX, bool FULL_OP_NAMES = true>
+template<int STACK_MAX = 16, int VAR_MAX = 32, bool FULL_OP_NAMES = true>
 class Shell {
 public:
   /**
@@ -228,50 +228,53 @@ public:
     const char* script;
     int pin, addr, val, n;
     switch (op) {
-    case '\\':
+    /*
+     *   Arithmetic operators.
+     */
+    case 'n': // x -- -x | negate
+      tos(-tos());
+      break;
+    case '+': // x y -- x+y | addition
+      val = pop();
+      tos(tos() + val);
+      break;
+    case '-': // x y -- x-y | subtraction
+      val = pop();
+      tos(tos() - val);
+      break;
+    case '*': // x y -- x*y | multiplication
+      val = pop();
+      tos(tos() * val);
+      break;
+    case '/': // x y -- x/y | division
+      val = pop();
+      tos(tos() / val);
+      break;
+    case '%': // x y -- x%y | modulo
+      val = pop();
+      tos(tos() % val);
+      break;
+    case 'h': // x y z -- x*y/z | scale
+      val = pop();
       n = pop();
-      // x1..xn n -- x1..xn | mark n-element stack frame
-      if (n > 0) {
-	m_fp = m_sp + n - 1;
-      }
-      // x1..xn y1..ym n -- y1..ym | resolve n-element stack frame
-      else {
-	n = m_fp - m_sp + n;
-	if (n >= 0) {
-	  while (n--) *--m_fp = m_sp[n];
-	  m_sp = m_fp;
-	}
-	else {
-	  m_sp = m_fp;
-	  pop();
-	}
-      }
+      tos(tos() * ((long) n) / val);
       break;
-    case '$': // n -- addr | address of n-element in frame
-      n = tos();
-      tos((m_fp - n) - m_var);
+    /*
+     *  Comparison/relational operators.
+     */
+    case 'F': // -- false | false
+      push(0);
       break;
-    case ':': // addr -- | execute function (variable)
-      addr = pop();
-      script = (const char*) read(addr);
-      if (script == NULL) return (false);
-      if (execute(script) != NULL) return (false);
-      break;
-    case '@': // addr -- val | read variable
-      tos(read(tos()));
-      break;
-    case '!': // val addr -- | write variable
-      addr = pop();
-      val = pop();
-      write(addr, val);
-      break;
-    case '#': // x y -- x!=y | not equal
-      val = pop();
-      tos(as_bool(tos() != val));
+    case 'T': // -- true | true
+      push(-1);
       break;
     case '=': // x y -- x==y | equal
       val = pop();
       tos(as_bool(tos() == val));
+      break;
+    case '#': // x y -- x!=y | not equal
+      val = pop();
+      tos(as_bool(tos() != val));
       break;
     case '<': // x y -- x<y | less than
       val = pop();
@@ -281,6 +284,9 @@ public:
       val = pop();
       tos(as_bool(tos() > val));
       break;
+    /*
+     *  Bitwise/logical operators.
+     */
     case '~': // x -- ~x | bitwise not
       tos(~tos());
       break;
@@ -296,32 +302,9 @@ public:
       val = pop();
       tos(tos() ^ val);
       break;
-    case '+': // x y -- x+y | addition
-      val = pop();
-      tos(tos() + val);
-      break;
-    case '-': // x y -- x-y | subtraction
-      val = pop();
-      push(pop() - val);
-      break;
-    case '*': // x y -- x*y | multiplication
-      val = pop();
-      tos(tos() * val);
-      break;
-    case '/': // x y -- x/y | division
-      val = pop();
-      tos(tos() / val);
-      break;
-    case '%': // x y -- x%y | modulo
-      val = pop();
-      push(pop() % val);
-      break;
-    case '?': // addr -- | print variable
-      tos(read(tos()));
-    case '.': // x -- | print number followed by one space
-      m_ios.print(pop());
-      m_ios.print(' ');
-      break;
+    /*
+     * Stack operations.
+     */
     case 'c': // xn..x1 n -- | drop n stack elements
       n = tos();
       if (depth() > n) {
@@ -331,6 +314,61 @@ public:
       }
     case 'd': // x -- | drop
       drop();
+      break;
+    case 'g': // xn..x1 n -- xn-1..x1 xn | rotate n-elements
+      n = tos();
+      if (n > 0 && n < depth()) {
+	tos(m_sp[--n]);
+	for (; n > 0; n--)
+	  m_sp[n] = m_sp[n - 1];
+	m_sp += 1;
+      }
+      else drop();
+      break;
+    case 'j': // xn..x1 -- xn..x1 n | stack depth
+      push(depth());
+      break;
+    case 'o': // x y -- x y x | over
+      push(*m_sp);
+      break;
+    case 'p': // xn..x1 n -- xn..x1 xn | pick
+      tos(*(m_sp + tos() - 1));
+      break;
+    case 'r': // x y z --- y z x | rotate
+      val = tos();
+      tos(*(m_sp + 1));
+      *(m_sp + 1) = *m_sp;
+      *m_sp = val;
+      break;
+    case 's': // x y -- y x | swap
+      val = tos();
+      tos(*m_sp);
+      *m_sp = val;
+      break;
+    case 'q': // x -- [x x] or 0 | duplicate if not zero
+      if (tos() == 0) break;
+    case 'u': // x -- x x | duplicate
+      push(tos());
+      break;
+    /*
+     * Memory access operations.
+     */
+    case '@': // addr -- val | read variable
+      tos(read(tos()));
+      break;
+    case '!': // val addr -- | write variable
+      addr = pop();
+      val = pop();
+      write(addr, val);
+      break;
+    /*
+     * Script/control structure operations.
+     */
+    case ':': // addr -- | execute function (variable)
+      addr = pop();
+      script = (const char*) read(addr);
+      if (script == NULL) return (false);
+      if (execute(script) != NULL) return (false);
       break;
     case 'e': // flag if-block else-block -- | execute block on flag
       val = *(m_sp + 1);
@@ -349,74 +387,15 @@ public:
       script = (const char*) pop();
       if (script != NULL) free((void*) script);
       break;
-    case 'g': // xn..x1 n -- xn-1..x1 xn | rotate n-elements
-      n = tos();
-      if (n > 0 && n < depth()) {
-	tos(m_sp[--n]);
-	for (; n > 0; n--)
-	  m_sp[n] = m_sp[n - 1];
-	m_sp += 1;
-      }
-      else drop();
-      break;
-    case 'h': // x y z -- x*y/z | scale
-      val = pop();
-      n = pop();
-      tos(tos() * ((long) n) / val);
-      break;
     case 'i': // flag block -- | execute block if flag is true
       script = (const char*) pop();
       if (pop() && execute(script) != NULL) return (false);
-      break;
-    case 'j': // xn..x1 -- xn..x1 n | stack depth
-      push(depth());
-      break;
-    case 'k': // -- [char true] or false | non-blocking read from input stream
-      val = m_ios.read();
-      if (val < 0) {
-	push(0);
-      } else {
-	push(val);
-	push(-1);
-      }
       break;
     case 'l': // n block -- | execute block n-times
       script = (const char*) pop();
       n = pop();
       while (n--)
 	if (execute(script) != NULL) return (false);
-      break;
-    case 'm': // -- | write new line to output stream
-      m_ios.println();
-      break;
-    case 'n': // x -- -x | negate
-      tos(-tos());
-      break;
-    case 'o': // x y -- x y x | over
-      push(*m_sp);
-      break;
-    case 'p': // xn..x1 n -- xn..x1 xn | pick
-      tos(*(m_sp + tos() - 1));
-      break;
-    case 'q': // x -- [x x] or 0 | duplicate if not zero
-      if (tos()) push(tos());
-      break;
-    case 'r': // x y z --- y z x | rotate
-      val = tos();
-      tos(*(m_sp + 1));
-      *(m_sp + 1) = *m_sp;
-      *m_sp = val;
-      break;
-    case 's': // x y -- y x | swap
-      val = tos();
-      tos(*m_sp);
-      *m_sp = val;
-      break;
-    case 'u': // x -- x x | duplicate
-      push(tos());
-      break;
-    case 'v': // char -- | write character to output stream
-      m_ios.write(pop());
       break;
     case 'w': // block( -- flag) -- | execute block while
       script = (const char*) pop();
@@ -431,6 +410,56 @@ public:
     case 'y': // -- | yield
       yield();
       break;
+    /*
+     * Stack frame operations.
+     */
+    case '\\':
+      n = pop();
+      // x1..xn n -- x1..xn | mark n-element stack frame
+      if (n > 0) {
+	m_fp = m_sp + n - 1;
+      }
+      // x1..xn y1..ym n -- y1..ym | resolve n-element stack frame
+      else {
+	n = m_fp - m_sp + n;
+	if (n >= 0) {
+	  while (n--) *--m_fp = m_sp[n];
+	  m_sp = m_fp;
+	}
+	else {
+	  m_sp = m_fp;
+	  drop();
+	}
+      }
+      break;
+    case '$': // n -- addr | address of n-element in frame
+      n = tos();
+      tos((m_fp - n) - m_var);
+      break;
+    /*
+     * Input/output operations.
+     */
+    case 'k': // -- char | blocking read from input stream
+      while ((val = m_ios.read()) < 0) yield();
+      push(val);
+      break;
+    case '.': // x -- | print number followed by one space
+      val = pop();
+      m_ios.print(val);
+      m_ios.print(' ');
+      break;
+    case '?': // addr -- | print variable
+      tos(read(tos()));
+    case 'm': // -- | write new line to output stream
+      m_ios.println();
+      break;
+    case 'v': // char -- | write character to output stream
+      val = pop();
+      m_ios.write(val);
+      break;
+    /*
+     * Arduino operations.
+     */
     case 'A': // pin -- sample | analogRead(pin)
       pin = tos();
       tos(analogRead(pin));
@@ -439,7 +468,8 @@ public:
       clear();
       break;
     case 'D': // ms -- | delay()
-      delay(pop());
+      val = pop();
+      delay((unsigned) val);
       break;
     case 'E': // period addr -- bool | time-out
       addr = pop();
@@ -451,22 +481,26 @@ public:
       }
       else tos(0);
       break;
-    case 'F': // -- false | false
-      push(0);
-      break;
     case 'H': // pin -- | digitalWrite(pin, HIGH)
       pin = pop();
       digitalWrite(pin, HIGH);
       break;
     case 'I': // pin -- | pinMode(pin, INPUT)
-      pinMode(pop(), INPUT);
+      pin = pop();
+      pinMode(pin, INPUT);
       break;
-    case 'K': // -- char | blocking read from input stream
-      while ((val = m_ios.read()) < 0) yield();
-      push(val);
+    case 'K': // -- [char true] or false | non-blocking read from input stream
+      val = m_ios.read();
+      if (val < 0) {
+	push(0);
+      } else {
+	push(val);
+	push(-1);
+      }
       break;
     case 'L': // pin -- | digitalWrite(pin, LOW)
-      digitalWrite(pop(), LOW);
+      pin = pop();
+      digitalWrite(pin, LOW);
       break;
     case 'M': // -- ms | millis()
       push(millis());
@@ -479,7 +513,8 @@ public:
       break;
     case 'P': // value pin -- | analogWrite(pin, value)
       pin = pop();
-      analogWrite(pin, pop());
+      val = pop();
+      analogWrite(pin, val);
       break;
     case 'R': // pin -- bool | digitalRead(pin)
       pin = tos();
@@ -488,16 +523,14 @@ public:
     case 'S': // -- | print stack contents
       print();
       break;
-    case 'T': // -- true | true
-      push(-1);
-      break;
     case 'U': // pin -- | pinMode(pin, INPUT_PULLUP)
       pin = pop();
       pinMode(pin, INPUT_PULLUP);
       break;
     case 'W': // value pin -- | digitalWrite(pin, value)
       pin = pop();
-      digitalWrite(pin, pop());
+      val = pop();
+      digitalWrite(pin, val);
       break;
     case 'X': // pin -- | digitalToggle(pin)
       pin = pop();
@@ -778,7 +811,7 @@ protected:
    {
      if (!FULL_OP_NAMES) return (NULL);
      switch (op) {
-     case 'b': return (F("ndrop"));
+     case 'c': return (F("ndrop"));
      case 'd': return (F("drop"));
      case 'e': return (F("ifelse"));
      case 'f': return (F("free"));
@@ -807,7 +840,7 @@ protected:
      case 'F': return (F("false"));
      case 'H': return (F("high"));
      case 'I': return (F("input"));
-     case 'K': return (F("key"));
+     case 'K': return (F("?key"));
      case 'L': return (F("low"));
      case 'M': return (F("millis"));
      case 'N': return (F(""));

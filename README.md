@@ -67,11 +67,11 @@ File>Examples menu.
 Opcode | Parameters | Description | Forth
 -------|:-----------|:------------|:-----
 , | -- | no operation |
-@ | addr -- val | read variable | @
-! | val addr -- | write variable | !
-: | addr -- | execute variable (function) |
-? | addr -- | print variable | ?
-; | block1 -- block2 | allocate block |
++ | x y -- x+y | addition | +
+- | x y -- x-y | subtraction | -
+* | x y -- x*y | multiplication | *
+/ | x y -- x/y | division | /
+% | x y -- x%y | modulo | MOD
 # | x y -- x!=y | not equal |
 = | x y -- x==y | equal | =
 < | x y -- x<y | less than | <
@@ -80,12 +80,12 @@ Opcode | Parameters | Description | Forth
 & | x y -- x&y | bitwise and | AND
 &#124; | x y -- x&#124;y | bitwise or | OR
 ^ | x y -- x^y | bitwise xor | XOR
-+ | x y -- x+y | addition | +
-- | x y -- x-y | subtraction | -
-* | x y -- x*y | multiplication | *
-/ | x y -- x/y | division | /
-% | x y -- x%y | modulo | MOD
+@ | addr -- val | read variable | @
+! | val addr -- | write variable | !
 . | x -- | print number followed by one space | .
+? | addr -- | print variable | ?
+; | block1 -- block2 | allocate block |
+: | addr -- | execute variable (function) |
 \ | x1..xn n -- x1..xn | n > 0: mark stack frame with n-elements |
 \ | x1..xn y1..ym n -- y1..ym | n < 0: remove stack frame with n-elements |
 $ | n -- addr | address of n-element in frame |
@@ -99,7 +99,7 @@ g | xn..x1 n -- xn-1..x1 xn | rotate n-elements | ROLL
 h | x y z -- (x*y)/z | scale | */
 i | flag block -- | execute block if flag is true | IF THEN
 j | xn..x1 -- xn..x1 n | stack depth | DEPTH
-k | -- [char true] or false | non-blocking read character from input stream |
+k | -- char | read character from input stream  | KEY
 l | n block -- | execute block n-times | DO LOOP
 m | -- | write new line to output stream | CR
 n | x -- -x | negate | NEGATE
@@ -119,10 +119,10 @@ A | pin -- sample | analogRead(pin) |
 C | xn..x1 -- | clear | ABORT
 D | ms -- | delay |
 E | period addr -- bool | check if timer variable has expired |
-F | -- false | false | 0
+F | -- false | false | FALSE
 H | pin -- | digitalWrite(pin, HIGH) |
 I | pin -- | pinMode(pin, INPUT) |
-K | -- char | read character from input stream  | KEY
+K | -- [char true] or false | non-blocking read character from input stream | ?KEY
 L | pin -- | digitalWrite(pin, LOW)  |
 M | -- ms | millis() |
 N | -- | no operation |
@@ -130,7 +130,7 @@ O | pin -- | pinMode(pin, OUTPUT) |
 P | value pin -- | analogWrite(pin, value) |
 R | pin --  bool | digitalRead(pin) |
 S | -- | print stack contents | .S
-T | -- true | true | -1
+T | -- true | true | TRUE
 U | pin -- | pinMode(pin, INPUT_PULLUP) |
 W | value pin -- | digitalWrite(pin, value) |
 X | pin -- | digitalToggle(pin)  |
