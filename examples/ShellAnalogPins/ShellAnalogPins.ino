@@ -1,5 +1,5 @@
 /**
- * @file ShellDemo.ino
+ * @file ShellAnalogPins.ino
  * @version 1.0
  *
  * @section License
@@ -16,30 +16,28 @@
  * Lesser General Public License for more details.
  *
  * @section Description
- * This Arduino sketch shows how to use the Shell library as
- * as an interactive shell.
+ * This Arduino sketch shows how to use the Shell library to
+ * execute scripts; generates output for Serial Plotter.
  */
 
 #include <Shell.h>
 
 Shell<> shell(Serial);
 
-const int BUF_MAX = 64;
-char buf[BUF_MAX];
-char* bp = buf;
-
 void setup()
 {
   Serial.begin(57600);
   while (!Serial);
-  Serial.println(F("ShellDemo: started"));
-  shell.trace(true);
+
+  // Periodically (100 ms) read analog pins (0..4) and write value.
+  // {
+  //   0 5 { dup analogRead . 1+ } loop drop cr
+  //   100 delay true
+  // } while
+
+  shell.execute("{0,5{uA.1+}ldm100DT}w");
 }
 
 void loop()
 {
-  if (shell.read(bp)) {
-    shell.execute(buf);
-    bp = buf;
-  }
 }
