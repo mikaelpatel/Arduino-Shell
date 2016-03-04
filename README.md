@@ -418,7 +418,7 @@ Calculate factorial number of given parameter.
 ```
 Script:
 ```
- {u0>{u1-`fac:*}{1}e};`fac!
+ {u0>{u1-`fac:*}{d1}e};`fac!
  5`fac.
 ```
 
