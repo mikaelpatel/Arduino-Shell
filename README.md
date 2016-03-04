@@ -251,7 +251,7 @@ A frame marker has the following form `n\ ... -n\` where _n_ is the
 number of elements (parameters and locals) in the frame. Positive _n_
 marks the frame and negative _n_ removes the frame stack elements
 leaving any return values. Elements within the frame can be accessed
-with `m_` where _m_ is the element index (1..n). The element address
+with `m$` where _m_ is the element index (1..n). The element address
 is pushed on the parameter stack and the value may be accessed with
 fetch `@` and store `!`.
 
