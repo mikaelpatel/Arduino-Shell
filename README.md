@@ -86,9 +86,9 @@ Opcode | Parameters | Description | Forth
 / | x y -- x/y | division | /
 % | x y -- x%y | modulo | MOD
 . | x -- | print number followed by one space | .
-$ | x1..xn n -- x1..xn | n > 0: mark stack frame with n-elements |
-$ | x1..xn y1..ym n -- y1..ym | n < 0: remove stack frame with n-elements |
-_ | n -- addr | address of n-element in frame |
+\ | x1..xn n -- x1..xn | n > 0: mark stack frame with n-elements |
+\ | x1..xn y1..ym n -- y1..ym | n < 0: remove stack frame with n-elements |
+$ | n -- addr | address of n-element in frame |
 b | xn..x1 n -- | drop n stack elements |
 d | x -- | drop | DROP
 e | flag if-block else-block -- | execute block on flag | IF ELSE THEN
@@ -177,20 +177,20 @@ Quote (apostrophe) a character to push it on the parameter stack.
 
 ### Variables
 
-Variables are defined with `\name`. The operator will return the
+Variables are defined with `` `name ``. The operator will return the
 address of the variable. It may be accessed using the operators fetch
 `@` and store `!`.
 ```
- 42\x!
- \x@
+ 42`x!
+ `x@
 ```
 The operator `?` can be used to print the value of a variable.
 ```
- \x?
+ `x?
 ```
-It is a short form for:
+It is a short hand for:
 ```
- \x@.
+ `x@.
 ```
 
 ### Blocks
@@ -205,16 +205,16 @@ stack. The block can be executed with the instruction _x_.
 The code block suffix `;` will copy the block to the heap. This can be
 used to create a named function by assigning the block to a variable.
 ```
- { code-block };\fun!
- \fun@x
+ { code-block };`fun!
+ `fun@x
 ```
-The short form for executing a function is `:`.
+The short hand for executing a function is `:`.
 ```
- \fun:
+ `fun:
 ```
 The instruction _f_ may be used to free the code block.
 ```
- \fun@f
+ `fun@f
 ```
 
 ### Control Structures
@@ -247,7 +247,7 @@ parameter stack.
 
 ### Frame Marker
 
-A frame marker has the following form `n$ ... -n$` where _n_ is the
+A frame marker has the following form `n\ ... -n\` where _n_ is the
 number of elements (parameters and locals) in the frame. Positive _n_
 marks the frame and negative _n_ removes the frame stack elements
 leaving any return values. Elements within the frame can be accessed
@@ -257,7 +257,7 @@ fetch `@` and store `!`.
 
 Swap could be defined as:
 ```
- 2$2_@1_@-2$
+ 2\2$@1$@-2\
 ```
 which will mark a frame with two arguments, copy the second and then
 the first argument, and last remove the frame, leaving the two return
@@ -268,8 +268,7 @@ values.
 Shell allows application extension with a virtual member function,
 trap(). The function is called when the current instruction could not
 be handled. The trap() function may parse any number of
-instructions. The backtick (aka grave accent) is reserved as an escape
-operation code.
+instructions. The underscore `_` reserved as an escape operation code.
 
 ## Example Scripts
 
@@ -311,14 +310,14 @@ instruction.
 ```
  13 output
  {
-   1000 \timer ?expired
+   1000 `timer ?expired
    { 13 digitalToggle } if
    true
  } while
 ```
 Script:
 ```
- 13O{1000\timer,E{13X}iT}w
+ 13O{1000`timer,E{13X}iT}w
 ```
 
 ### Blink with on/off button
@@ -404,8 +403,8 @@ Calculate factorial number of given parameter.
 ```
 Script:
 ```
- {1s{u0>{so*s1-T}{dF}e}w};\fac!
- 5\fac:.
+ {1s{u0>{so*s1-T}{dF}e}w};`fac!
+ 5`fac:.
 ```
 
 ### Range check function
@@ -443,10 +442,10 @@ stack frame for the three parameters.
 ```
 Script:
 ```
- {3$1_@3_@>1_@2_@<|~-3$};\within!
- 10,5,100\within:
- -10,5,100\within:
- 110,5,100\within:
+ {3\1$@3$@>1$@2$@<|~-3\};`within!
+ 10,5,100`within:
+ -10,5,100`within:
+ 110,5,100`within:
 ```
 
 ### Stack vector sum

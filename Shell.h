@@ -228,7 +228,7 @@ public:
     const char* script;
     int pin, addr, val, n;
     switch (op) {
-    case '$':
+    case '\\':
       n = pop();
       // x1..xn n -- x1..xn | mark n-element stack frame
       if (n > 0) {
@@ -247,7 +247,7 @@ public:
 	}
       }
       break;
-    case '_': // n -- addr | address of n-element in frame
+    case '$': // n -- addr | address of n-element in frame
       n = tos();
       tos((m_fp - n) - m_var);
       break;
@@ -584,7 +584,7 @@ public:
 	  m_ios.print(c);
 	else
 	  m_ios.print(str);
-	if (c != '\\') {
+	if (c != '`') {
 	  m_ios.print(':');
 	  print();
 	}
@@ -610,7 +610,7 @@ public:
 	  else tos(-1);
 	}
 	continue;
-      case '\\': // -- addr | lookup or add variable
+      case '`': // -- addr | lookup or add variable
 	{
 	  const char* name = s;
 	  size_t len = 0;
@@ -731,7 +731,7 @@ public:
   }
 
 protected:
-  static const char TRAP_CHAR = '`';
+  static const char TRAP_CHAR = '_';
   int m_dp;			//!< Next free dictionary entry.
   int* m_fp;			//!< Frame pointer.
   int* m_sp;			//!< Stack pointer.

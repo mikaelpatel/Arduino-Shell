@@ -38,7 +38,7 @@ void setup()
   //      pin low ms delay
   //      true
   //   } while ;
-  const char* blink = "2$2_@O{2_@H1_@D2_@L1_@DT}w";
+  const char* blink = "2\\2$@O{2$@H1$@D2$@L1$@DT}w";
 
   // 1000 13 blink
   shell.trace(true);
