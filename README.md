@@ -89,7 +89,9 @@ Opcode | Parameters | Description | Forth
 \ | x1..xn n -- x1..xn | n > 0: mark stack frame with n-elements |
 \ | x1..xn y1..ym n -- y1..ym | n < 0: remove stack frame with n-elements |
 $ | n -- addr | address of n-element in frame |
-b | xn..x1 n -- | drop n stack elements |
+a | -- | reserved |
+b | -- | reserved |
+c | xn..x1 n -- | drop n stack elements |
 d | x -- | drop | DROP
 e | flag if-block else-block -- | execute block on flag | IF ELSE THEN
 f | block -- | free block |
@@ -110,7 +112,8 @@ u | x -- x x | duplicate | DUP
 v | char -- | write character to output stream | EMIT
 w | block( -- flag) -- | execute block while flag is true | BEGIN UNTIL
 x | block -- | execute block | EXECUTE
-y | -- | yield for multi-tasking scheduler |
+y | -- | reserved |
+z | -- | reserved |
 A | pin -- sample | analogRead(pin) |
 C | xn..x1 -- | clear | ABORT
 D | ms -- | delay |
@@ -130,6 +133,7 @@ T | -- true | true | -1
 U | pin -- | pinMode(pin, INPUT_PULLUP) |
 W | value pin -- | digitalWrite(pin, value) |
 X | pin -- | digitalToggle(pin)  |
+Y | -- | yield for multi-tasking scheduler |
 Z | -- | toggle trace mode |
 
 ## Special forms

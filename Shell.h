@@ -322,11 +322,11 @@ public:
       m_ios.print(pop());
       m_ios.print(' ');
       break;
-    case 'b': // xn..x1 n -- | drop n stack elements
+    case 'c': // xn..x1 n -- | drop n stack elements
       n = tos();
       if (depth() > n) {
 	m_sp += n;
-	pop();
+	drop();
 	break;
       }
     case 'd': // x -- | drop
