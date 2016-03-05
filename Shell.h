@@ -307,7 +307,7 @@ public:
      */
     case 'c': // xn..x1 n -- | drop n stack elements
       n = tos();
-      if (depth() > n) {
+      if (n > 0 && n < depth()) {
 	m_sp += n;
       }
     case 'd': // x -- | drop
@@ -646,7 +646,7 @@ public:
 	  const char* name = s;
 	  size_t len = 0;
 	  int i;
-	  while (((c = *s++) != 0) && isalpha(c)) len++;
+	  while (((c = *s++) != 0) && isalnum(c)) len++;
 	  if (len > 0) {
 	    for (i = 0; i != m_dp; i++)
 	      if (!strncmp(m_dict[i], name, len))
@@ -661,7 +661,7 @@ public:
 	      else
 		i = -1;
 	    }
-	    if (i != -1) {
+	    if (i != -1 && m_trace) {
 	      m_ios.print(m_dict[i]);
 	      m_ios.print(':');
 	      print();
