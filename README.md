@@ -1,18 +1,20 @@
 # Arduino-Shell
 
-This library provides a forth/postscript style shell for Arduino
-sketches. Shell uses a byte token threaded instruction set. The
-tokens, characters, are chosen so that it is possible to write small
-scripts directly without a token compiler. As forth scripts are
-written in Reverse Polish Notation (RPN), and executed in the given
-order.
+This library provides a Forth/PostScript style shell for Arduino
+sketches. Shell is a virtual stack machine with a byte token threaded
+instruction set. The tokens, characters, are chosen so that it is
+possible to write small scripts directly without a token compiler. As
+Forth scripts are written in Reverse Polish Notation (RPN), and
+executed in the given order.
 
 ![screenshot](https://dl.dropboxusercontent.com/u/993383/Cosa/screenshots/Screenshot%20from%202016-02-29%2011%3A00%3A13.png)
 
-The shell has built-in instruction level trace to aid script debugging and
+Shell has built-in instruction level trace to aid script debugging and
 performance tuning. It prints the instruction cycle count, script
 address, opcode (or full operation name), stack depth and
 contents. Typical output in the Serial Monitor above.
+
+Shell can be configured to trace full operation names or tokens.
 
 The classical Arduino Blink sketch in the shell script language is
 ```
@@ -140,7 +142,7 @@ Z | -- | toggle trace mode |
 ## Special forms
 
 The shell script language allows several special forms such as literal
-values, blocks and control structures.
+values, blocks, control structures and argument frames.
 
 ### Boolean
 
@@ -182,9 +184,9 @@ Quote (apostrophe) a character to push it on the parameter stack.
 
 ### Variables
 
-Variables are defined with `` `name ``. The operator will return the
-address of the variable. It may be accessed using the operators fetch
-`@` and store `!`.
+Variables are defined with `` `name ``. The operator will push the
+address of the variable on the parameter stack. It may be accessed
+using the operators fetch `@` and store `!`.
 ```
  42`x!
  `x@
@@ -193,16 +195,15 @@ The operator `?` can be used to print the value of a variable.
 ```
  `x?
 ```
-It is a short hand for:
+It is short hand for:
 ```
  `x@.
 ```
 
 ### Blocks
 
-Code blocks have the following form `{ code-block }`. They begin with left
-curley bracket and end with a right curley bracket. When the script is
-executed the address of the block is pushed on the parameter
+Code blocks have the following form `{ code-block }`. When the script
+is executed the address of the block is pushed on the parameter
 stack. The block can be executed with the instruction _x_.
 ```
  { code-block } x
@@ -225,9 +226,9 @@ The instruction _f_ may be used to free the code block.
 ### Control Structures
 
 Control structures follow the same format at PostScript. They are also
-Reverse Polish Notation (RPN). The blocks are pushed on the stack
-before the control structure instruction. Below are the control
-structures with full instruction names.
+in Reverse Polish Notation (RPN). The blocks are pushed on the
+parameter stack before the control structure instruction. Below are
+the control structures with full instruction names.
 ```
  bool { if-block } if
  bool { if-block } { else-block } ifelse
@@ -236,7 +237,8 @@ structures with full instruction names.
 
  { while-block bool } while
 ```
-The instructions are _i_, _e_, _l_ and _w_.
+The instructions are _i_ for `if`, _e_ for `ifelse`, _l_ for `loop`
+and _w_ for `while`.
 
 ### Output Strings
 
@@ -262,7 +264,7 @@ fetch `@` and store `!`.
 
 Swap could be defined as:
 ```
- 2\2$@1$@-2\
+ {2\2$@1$@-2\};`swap!
 ```
 which will mark a frame with two arguments, copy the second and then
 the first argument, and last remove the frame, leaving the two return
@@ -271,9 +273,9 @@ values.
 ### Extended Instructions
 
 Shell allows application extension with a virtual member function,
-trap(). The function is called when the current instruction could not
-be handled. The trap() function may parse any number of
-instructions. The underscore `_` reserved as an escape operation code.
+`trap()`. The function is called when the current instruction could not
+be handled. The `trap()` function may parse any number of
+instructions. Underscore `_` reserved as an escape operation code.
 
 ## Example Scripts
 
@@ -325,7 +327,7 @@ Script:
  13O{1000`timer,E{13X}iT}w
 ```
 
-### Blink with on/off button
+### Blink controlled by on/off button
 
 Turn board LED, pin 13, on/off with 1000 ms period if pin 2 is low.
 ```
@@ -342,7 +344,7 @@ Turn board LED, pin 13, on/off with 1000 ms period if pin 2 is low.
 ```
 Script:
 ```
-2U13O{2R~{13H1000D13L1000D}iT}w
+ 2U13O{2R~{13H1000D13L1000D}iT}w
 ```
 
 ### Read Analog Pins
@@ -391,42 +393,6 @@ Script:
  13O{0Au100<s200>|~13WT}w
 ```
 
-### Iterative Factorial
-
-Calculate factorial number of given parameter.
-```
- : fac ( n -- n! )
-   1 swap
-   {
-     dup 0>
-       { swap over * swap 1- true }
-       { drop false }
-     ifelse
-   } while ;
-
- 5 fac .
-```
-Script:
-```
- {1s{u0>{so*s1-T}{dF}e}w};`fac!
- 5`fac:.
-```
-
-### Recursive Factorial
-
-Calculate factorial number of given parameter.
-```
- : fac ( n -- n! )
-   dup 0> { dup 1- fac * } { drop 1 } ifelse ;
-
- 5 fac .
-```
-Script:
-```
- {u0>{u1-`fac:*}{d1}e};`fac!
- 5`fac.
-```
-
 ### Range check function
 
 Check that a given parameter is within a range low to high.
@@ -466,6 +432,42 @@ Script:
  10,5,100`within:
  -10,5,100`within:
  110,5,100`within:
+```
+
+### Iterative Factorial
+
+Calculate factorial number of given parameter.
+```
+ : fac ( n -- n! )
+   1 swap
+   {
+     dup 0>
+       { swap over * swap 1- true }
+       { drop false }
+     ifelse
+   } while ;
+
+ 5 fac .
+```
+Script:
+```
+ {1s{u0>{so*s1-T}{dF}e}w};`fac!
+ 5`fac:.
+```
+
+### Recursive Factorial
+
+Calculate factorial number of given parameter.
+```
+ : fac ( n -- n! )
+   dup 0> { dup 1- fac * } { drop 1 } ifelse ;
+
+ 5 fac .
+```
+Script:
+```
+ {u0>{u1-`fac:*}{d1}e};`fac!
+ 5`fac.
 ```
 
 ### Stack vector sum

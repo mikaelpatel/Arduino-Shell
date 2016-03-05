@@ -309,8 +309,6 @@ public:
       n = tos();
       if (depth() > n) {
 	m_sp += n;
-	drop();
-	break;
       }
     case 'd': // x -- | drop
       drop();
@@ -443,13 +441,13 @@ public:
       while ((val = m_ios.read()) < 0) yield();
       push(val);
       break;
+    case '?': // addr -- | print variable
+      tos(read(tos()));
     case '.': // x -- | print number followed by one space
       val = pop();
       m_ios.print(val);
       m_ios.print(' ');
       break;
-    case '?': // addr -- | print variable
-      tos(read(tos()));
     case 'm': // -- | write new line to output stream
       m_ios.println();
       break;
