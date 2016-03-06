@@ -86,13 +86,11 @@ Opcode | Parameters | Description | Forth
 ! | val addr -- | write variable | !
 . | x -- | print number followed by one space | .
 ? | addr -- | print variable | ?
-; | block1 -- block2 | allocate block |
+; | addr block -- | copy block and assign variable (function) |
 : | addr -- | execute variable (function) |
 \ | x1..xn n -- x1..xn | n > 0: mark stack frame with n-elements |
 \ | x1..xn y1..ym n -- y1..ym | n < 0: remove stack frame with n-elements |
 $ | n -- addr | address of n-element in frame |
-a | -- | reserved |
-b | -- | reserved |
 c | xn..x1 n -- | drop n stack elements |
 d | x -- | drop | DROP
 e | flag if-block else-block -- | execute block on flag | IF ELSE THEN
@@ -110,13 +108,10 @@ p | xn..x1 n -- xn..x1 xn | pick | PICK
 q | x -- [x x] or 0 | duplicate if not zero | ?DUP
 r | x y z --- y z x | rotate | ROT
 s | x y -- y x | swap | SWAP
-t | -- | reserved |
 u | x -- x x | duplicate | DUP
 v | char -- | write character to output stream | EMIT
 w | block( -- flag) -- | execute block while flag is true | BEGIN UNTIL
 x | block -- | execute block | EXECUTE
-y | -- | reserved |
-z | -- | reserved |
 A | pin -- sample | analogRead(pin) |
 C | xn..x1 -- | clear | ABORT
 D | ms -- | delay |
@@ -208,10 +203,10 @@ stack. The block can be executed with the instruction _x_.
 ```
  { code-block } x
 ```
-The code block suffix `;` will copy the block to the heap. This can be
-used to create a named function by assigning the block to a variable.
+The operation `;` will copy a block to the heap and assign a
+variable. Used in the form:
 ```
- { code-block };`fun!
+ `fun { code-block };
  `fun@x
 ```
 The short hand for executing a function is `:`.
@@ -264,7 +259,7 @@ fetch `@` and store `!`.
 
 Swap could be defined as:
 ```
- {2\2$@1$@-2\};`swap!
+ `swap {2\2$@1$@-2\};
 ```
 which will mark a frame with two arguments, copy the second and then
 the first argument, and last remove the frame, leaving the two return
@@ -275,7 +270,7 @@ values.
 Shell allows application extension with a virtual member function,
 `trap()`. The function is called when the current instruction could not
 be handled. The `trap()` function may parse any number of
-instructions. Underscore `_` reserved as an escape operation code.
+instructions. Underscore `_` is used as the escape operation code.
 
 ## Example Scripts
 
@@ -400,16 +395,16 @@ Check that a given parameter is within a range low to high.
  : within ( x low high -- bool )
    rot swap over swap > swap rot < or not ;
 
- 10 5 100 within .
+  10 5 100 within .
  -10 5 100 within .
  110 5 100 within .
 ```
 Script:
 ```
- {rsos>sr<|~};\within!
- 10,5,100\within:
- -10,5,100\within:
- 110,5,100\within:
+ `within{rsos>sr<|~};
+  10,5,100`within:.
+ -10,5,100`within:.
+ 110,5,100`within:.
 ```
 
 ### Range check function with stack frame
@@ -418,20 +413,18 @@ Check that a given parameter is within a range low to high. Use a
 stack frame for the three parameters.
 ````
  : within { x low high -- bool }
-   x @ high @ >
-   x @ low @ <
-   or not ;
+   x @ high @ > x @ low @ < or not ;
 
- 10 5 100 within .
+  10 5 100 within .
  -10 5 100 within .
  110 5 100 within .
 ```
 Script:
 ```
- {3\1$@3$@>1$@2$@<|~-3\};`within!
- 10,5,100`within:
- -10,5,100`within:
- 110,5,100`within:
+ `within{3\1$@3$@>1$@2$@<|~-3\};
+  10,5,100`within:.
+ -10,5,100`within:.
+ 110,5,100`within:.
 ```
 
 ### Iterative Factorial
@@ -451,7 +444,7 @@ Calculate factorial number of given parameter.
 ```
 Script:
 ```
- {1s{u0>{so*s1-T}{dF}e}w};`fac!
+ `fac{1s{u0>{so*s1-T}{dF}e}w};
  5`fac:.
 ```
 
@@ -460,14 +453,17 @@ Script:
 Calculate factorial number of given parameter.
 ```
  : fac ( n -- n! )
-   dup 0> { dup 1- fac * } { drop 1 } ifelse ;
+   dup 0>
+     { dup 1- fac * }
+     { drop 1 }
+   ifelse ;
 
  5 fac .
 ```
 Script:
 ```
- {u0>{u1-`fac:*}{d1}e};`fac!
- 5`fac.
+ `fac{u0>{u1-`fac:*}{d1}e};
+ 5`fac:.
 ```
 
 ### Stack vector sum

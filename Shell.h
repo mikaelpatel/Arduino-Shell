@@ -556,6 +556,7 @@ public:
     bool neg = false;
     int base = 10;
     int* fp = m_fp;
+    size_t len = 0;
     char c;
 
     // Execute operation code in script
@@ -629,16 +630,14 @@ public:
 	continue;
       case '}': // -- | end of block
 	return (NULL);
-      case ';': // block1 -- block2 | copy block to heap
+      case ';': // addr block -- | copy block to variable
 	{
-	  const char* src = (const char*) tos();
-	  size_t len = s - src - 1;
+	  const char* src = (const char*) pop();
+	  int addr = pop();
 	  char* dest = (char*) malloc(len + 1);
-	  if (dest != NULL) {
-	    strlcpy(dest, src, len);
-	    tos(dest);
-	  }
-	  else tos(-1);
+	  if (dest == NULL) break;
+	  strlcpy(dest, src, len);
+	  write(addr, dest);
 	}
 	continue;
       case '`': // -- addr | lookup or add variable
@@ -711,6 +710,10 @@ public:
 	  else if (c == right) n--;
 	  if (left == '(' && n > 0) m_ios.print(c);
 	}
+	if (c == '}') {
+	  const char* src = (const char*) tos();
+	  len = s - src;
+	}
 	if (c == 0) {
 	  s -= 1;
 	  c = left;
@@ -720,10 +723,10 @@ public:
       }
 
       // Execute operation code
-      if (c != TRAP_CHAR && execute(c)) continue;
+      if (execute(c)) continue;
 
       // Check for trap operation code
-      s = s - 1;
+      if (c != TRAP_CHAR) break;
       const char* p = trap(s);
       if (p == NULL) break;
       s = p;
