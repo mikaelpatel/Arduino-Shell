@@ -46,7 +46,7 @@ void setup()
 {
   Serial.begin(57600);
   while (!Serial);
-  Serial.println(F("ShellTrap: started"));
+  Serial.println(F("ShellTrap: started, use [Newline] mode"));
   shell.trace(true);
 }
 
