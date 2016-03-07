@@ -40,7 +40,7 @@ void setup()
   //   true
   // } while;
 
-  Script multiblink =
+  Script* multiblink =
     SCRIPT("13O,12O,11O"
 	   "{500`timer1,E{13X}i"
 	    "300`timer2,E{12X}i"

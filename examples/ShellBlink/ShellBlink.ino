@@ -40,8 +40,7 @@ void setup()
   //      dup low over delay
   //      true
   //    } while ;
-  // const char* blink = "uO{uHoDuLoDT}w";
-  Script blink = SCRIPT("uO{uHoDuLoDT}w");
+  Script* blink = SCRIPT("uO{uHoDuLoDT}w");
 
   // 1000 13 blink
   shell.push(1000);

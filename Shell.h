@@ -20,13 +20,13 @@
 #define SHELL_H
 
 /** Script strings in program memory */
-class __Script;
+class Script;
 
 /**
  * Create a shell script with given string in program memory.
  * @param[in] s script string.
  */
-#define SCRIPT(s) ((__Script*) PSTR(s))
+#define SCRIPT(s) ((Script*) PSTR(s))
 
 /**
  * Script Shell with stack machine instruction set. Instructions are
@@ -767,7 +767,7 @@ public:
    * @param[in] script program memory based script.
    * @return script reference or NULL.
    */
-  const char* execute(__Script* script)
+  const char* execute(Script* script)
   {
     return (execute((const char*) (-(int) script)));
   }
