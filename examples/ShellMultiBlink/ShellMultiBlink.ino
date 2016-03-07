@@ -40,8 +40,12 @@ void setup()
   //   true
   // } while;
 
-  const char* multiblink =
-    "13O12O11O{1000`timer1,E{13X}i300`timer2,E{12X}i100`timer3,E{11X}iT}w";
+  Script multiblink =
+    SCRIPT("13O,12O,11O"
+	   "{1000`timer1,E{13X}i"
+	    "300`timer2,E{12X}i"
+	    "100`timer3,E{11X}i"
+	    "T}w");
   shell.execute(multiblink);
 }
 

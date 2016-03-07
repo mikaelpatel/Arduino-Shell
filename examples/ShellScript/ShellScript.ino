@@ -18,10 +18,6 @@
  * @section Description
  * This Arduino sketch shows how to use the Shell library to
  * execute scripts.
- *
- * Direct script strings: 8,912/545 bytes
- * Program memory strings: 8,960/507 bytes
- * Difference: +48/-38 bytes
  */
 
 #include <Shell.h>
@@ -29,24 +25,11 @@
 // Shell 16 depth stack and 16 variables
 Shell<16,16> shell(Serial);
 
-// Script buffer
-#define USE_BUFFER
-#if defined(USE_BUFFER)
-const int BUF_MAX = 64;
-char buf[BUF_MAX];
-#define SCRIPT(s) strcpy_P(buf, PSTR(s))
-#else
-#define SCRIPT(s) (s)
-#endif
-
 void setup()
 {
   Serial.begin(57600);
   while (!Serial);
   Serial.println(F("ShellScript: started"));
-
-  // Turn on trace
-  shell.trace(true);
 
   // : blinks ( n ms pin -- )
   //   dup output
@@ -55,7 +38,9 @@ void setup()
   shell.execute(SCRIPT("`blinks{uOr{uHoDuLoD}ldd};"));
 
   // 5 1000 13 blinks
+  shell.trace(true);
   shell.execute(SCRIPT("5,1000,13`blinks:"));
+  shell.trace(false);
 
   // : monitor ( buttonPin ledPin -- )
   //   over inputPullup
@@ -69,7 +54,9 @@ void setup()
   shell.execute(SCRIPT("`monitor{oUuO{oR{1000}{200}eoHuDoLDT}w};"));
 
   // 2 13 monitor
+  shell.trace(true);
   shell.execute(SCRIPT("2,13`monitor:"));
+  shell.trace(false);
 }
 
 void loop()

@@ -19,6 +19,15 @@
 #ifndef SHELL_H
 #define SHELL_H
 
+/** Script strings in program memory */
+typedef const class __FlashStringHelper* Script;
+
+/**
+ * Create a shell script with given string in program memory.
+ * @param[in] s script string.
+ */
+#define SCRIPT(s) (Script) F(s)
+
 /**
  * Script Shell with stack machine instruction set. Instructions are
  * printable characters so that command lines and scripts can be
@@ -552,6 +561,7 @@ public:
    */
   const char* execute(const char* s)
   {
+    bool progmem = false;
     const char* t = s;
     bool neg = false;
     int base = 10;
@@ -559,12 +569,18 @@ public:
     size_t len = 0;
     char c;
 
+    // Check for program memory address
+    if (((int) s) < 0) {
+      progmem = true;
+      s = (const char*) -((int) s);
+    }
+
     // Execute operation code in script
-    while ((c = *s++) != 0) {
+    while ((c = read(s++, progmem)) != 0) {
 
       // Check for negative numbers
       if (c == '-') {
-	c = *s;
+	c = read(s, progmem);
 	if (c < '0' || c > '9') {
 	  c = '-';
 	}
@@ -576,11 +592,11 @@ public:
 
       // Check for base prefix
       else if (c == '0') {
-	c = *s++;
+	c = read(s++, progmem);
 	if (c == 'x') base = 16;
 	else if (c == 'b') base = 2;
 	else s -= 2;
-	c = *s++;
+	c = read(s++, progmem);
       }
 
       // Check for literal numbers
@@ -591,7 +607,7 @@ public:
 	    val = (val * base) + (c - 'a') + 10;
 	  else
 	    val = (val * base) + (c - '0');
-	  c = *s++;
+	  c = read(s++, progmem);
 	} while (is_digit(c, base));
 	if (neg) {
 	  val = -val;
@@ -634,10 +650,15 @@ public:
 	{
 	  const char* src = (const char*) pop();
 	  int addr = pop();
-	  char* dest = (char*) malloc(len + 1);
-	  if (dest == NULL) break;
-	  strlcpy(dest, src, len);
-	  write(addr, dest);
+	  if (progmem) {
+	    write(addr, src);
+	  }
+	  else {
+	    char* dest = (char*) malloc(len + 1);
+	    if (dest == NULL) break;
+	    strlcpy(dest, src, len);
+	    write(addr, dest);
+	  }
 	}
 	continue;
       case '`': // -- addr | lookup or add variable
@@ -645,15 +666,24 @@ public:
 	  const char* name = s;
 	  size_t len = 0;
 	  int i;
-	  while (((c = *s++) != 0) && isalnum(c)) len++;
+	  while (((c = read(s++, progmem)) != 0) && isalnum(c)) len++;
 	  if (len > 0) {
 	    for (i = 0; i != m_dp; i++)
-	      if (!strncmp(m_dict[i], name, len))
-		break;
+	      if (progmem) {
+		if (!strncmp_P(m_dict[i], name, len))
+		  break;
+	      }
+	      else {
+		if (!strncmp(m_dict[i], name, len))
+		  break;
+	      }
 	    if (i == m_dp) {
 	      char* dest = (char*) malloc(len + 1);
 	      if (dest != NULL) {
-		strlcpy(dest, name, len + 1);
+		if (progmem)
+		  strlcpy_P(dest, name, len + 1);
+		else
+		  strlcpy(dest, name, len + 1);
 		m_dict[i] = dest;
 		m_dp += 1;
 	      }
@@ -671,7 +701,7 @@ public:
 	s = s - 1;
 	continue;
       case '\'': // -- char | push character
-	c = *s;
+	c = read(s, progmem);
 	if (c != 0) {
 	  push(c);
 	  s += 1;
@@ -680,7 +710,10 @@ public:
       case '{': // -- block | start code block
 	left = '{';
 	right = '}';
-	push(s);
+	if (progmem)
+	  push(-((int) s));
+	else
+	  push(s);
 	break;
       case '(': // -- | start output string
 	left = '(';
@@ -705,7 +738,7 @@ public:
       // Parse special parenphesis forms (allow nesting)
       if (left) {
 	int n = 1;
-	while ((n != 0) && ((c = *s++) != 0)) {
+	while ((n != 0) && ((c = read(s++, progmem)) != 0)) {
 	  if (c == left) n++;
 	  else if (c == right) n--;
 	  if (left == '(' && n > 0) m_ios.print(c);
@@ -751,6 +784,18 @@ public:
 
     // Return error position
     return (s);
+  }
+
+  /**
+   * Execute given script in program memory (null terminated sequence
+   * of operation codes). Return NULL if successful otherwise script
+   * reference that failed. Prints error position in trace mode.
+   * @param[in] s program memory based script.
+   * @return script reference or NULL.
+   */
+  const char* execute(Script s)
+  {
+    return (execute((const char*) (-(int) s)));
   }
 
   /**
@@ -808,56 +853,71 @@ protected:
    * @param[in] op operation code (character).
    * @return program memory string or NULL.
    */
-   const class __FlashStringHelper* as_fstr(char op)
-   {
-     if (!FULL_OP_NAMES) return (NULL);
-     switch (op) {
-     case 'c': return (F("ndrop"));
-     case 'd': return (F("drop"));
-     case 'e': return (F("ifelse"));
-     case 'f': return (F("free"));
-     case 'g': return (F("roll"));
-     case 'h': return (F("*/"));
-     case 'i': return (F("if"));
-     case 'j': return (F("depth"));
-     case 'k': return (F("key"));
-     case 'l': return (F("loop"));
-     case 'm': return (F("cr"));
-     case 'n': return (F("negate"));
-     case 'o': return (F("over"));
-     case 'p': return (F("pick"));
-     case 'q': return (F("?dup"));
-     case 'r': return (F("rot"));
-     case 's': return (F("swap"));
-     case 'u': return (F("dup"));
-     case 'v': return (F("emit"));
-     case 'w': return (F("while"));
-     case 'x': return (F("execute"));
-     case 'y': return (F("yield"));
-     case 'A': return (F("analogRead"));
-     case 'C': return (F("clear"));
-     case 'D': return (F("delay"));
-     case 'E': return (F("?expired"));
-     case 'F': return (F("false"));
-     case 'H': return (F("high"));
-     case 'I': return (F("input"));
-     case 'K': return (F("?key"));
-     case 'L': return (F("low"));
-     case 'M': return (F("millis"));
-     case 'N': return (F(""));
-     case 'O': return (F("output"));
-     case 'P': return (F("analogWrite"));
-     case 'R': return (F("digitalRead"));
-     case 'S': return (F(".s"));
-     case 'T': return (F("true"));
-     case 'U': return (F("inputPullup"));
-     case 'W': return (F("digitalWrite"));
-     case 'X': return (F("digitalToggle"));
-     case 'Z': return (F("toggleTraceMode"));
-     default:
-       return (NULL);
-     }
-   }
+  const class __FlashStringHelper* as_fstr(char op)
+  {
+    if (!FULL_OP_NAMES) return (NULL);
+    switch (op) {
+    case 'c': return (F("ndrop"));
+    case 'd': return (F("drop"));
+    case 'e': return (F("ifelse"));
+    case 'f': return (F("free"));
+    case 'g': return (F("roll"));
+    case 'h': return (F("*/"));
+    case 'i': return (F("if"));
+    case 'j': return (F("depth"));
+    case 'k': return (F("key"));
+    case 'l': return (F("loop"));
+    case 'm': return (F("cr"));
+    case 'n': return (F("negate"));
+    case 'o': return (F("over"));
+    case 'p': return (F("pick"));
+    case 'q': return (F("?dup"));
+    case 'r': return (F("rot"));
+    case 's': return (F("swap"));
+    case 'u': return (F("dup"));
+    case 'v': return (F("emit"));
+    case 'w': return (F("while"));
+    case 'x': return (F("execute"));
+    case 'y': return (F("yield"));
+    case 'A': return (F("analogRead"));
+    case 'C': return (F("clear"));
+    case 'D': return (F("delay"));
+    case 'E': return (F("?expired"));
+    case 'F': return (F("false"));
+    case 'H': return (F("high"));
+    case 'I': return (F("input"));
+    case 'K': return (F("?key"));
+    case 'L': return (F("low"));
+    case 'M': return (F("millis"));
+    case 'N': return (F(""));
+    case 'O': return (F("output"));
+    case 'P': return (F("analogWrite"));
+    case 'R': return (F("digitalRead"));
+    case 'S': return (F(".s"));
+    case 'T': return (F("true"));
+    case 'U': return (F("inputPullup"));
+    case 'W': return (F("digitalWrite"));
+    case 'X': return (F("digitalToggle"));
+    case 'Z': return (F("toggleTraceMode"));
+    default:
+      return (NULL);
+    }
+  }
+
+  /**
+   * Read next operation code from random access or program memory.
+   * @param[in] s script pointer.
+   * @param[in] progmem program memory flag.
+   * @return operation code.
+   */
+  char read(const char* s, bool progmem)
+  {
+    if (progmem)
+      return (pgm_read_byte(s));
+    else
+      return (*s);
+  }
+
 };
 
 #endif

@@ -30,6 +30,9 @@ void setup()
   while (!Serial);
   Serial.println(F("ShellBlink: started"));
 
+  // Use shell trace mode
+  shell.trace(true);
+
   // : blink ( ms pin -- )
   //   dup output
   //   {
@@ -37,10 +40,10 @@ void setup()
   //      dup low over delay
   //      true
   //    } while ;
-  const char* blink = "uO{uHoDuLoDT}w";
+  // const char* blink = "uO{uHoDuLoDT}w";
+  Script blink = SCRIPT("uO{uHoDuLoDT}w");
 
   // 1000 13 blink
-  shell.trace(true);
   shell.push(1000);
   shell.push(13);
   shell.execute(blink);
