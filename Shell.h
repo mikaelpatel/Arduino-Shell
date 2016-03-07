@@ -158,6 +158,26 @@ public:
   }
 
   /**
+   * Print parameter stack contents in format: n: xn..x1
+   */
+  void print()
+  {
+    int n = depth();
+    m_ios.print(n);
+    m_ios.print(':');
+    if (n > 0) {
+      int* tp = m_stack + STACK_MAX - 1;
+      while (--n) {
+	m_ios.print(' ');
+	m_ios.print(*--tp);
+      }
+      m_ios.print(' ');
+      m_ios.print(m_tos);
+    }
+    m_ios.println();
+  }
+
+  /**
    * Read variable.
    * @param[in] addr address.
    * @return value.
@@ -187,26 +207,6 @@ public:
   void write(int addr, const char* s)
   {
     write(addr, (int) s);
-  }
-
-  /**
-   * Print parameter stack contents in format: n: xn..x1
-   */
-  void print()
-  {
-    int n = depth();
-    m_ios.print(n);
-    m_ios.print(':');
-    if (n > 0) {
-      int* tp = m_stack + STACK_MAX - 1;
-      while (--n) {
-	m_ios.print(' ');
-	m_ios.print(*--tp);
-      }
-      m_ios.print(' ');
-      m_ios.print(m_tos);
-    }
-    m_ios.println();
   }
 
   /**
@@ -561,7 +561,7 @@ public:
    */
   const char* execute(const char* s)
   {
-    bool progmem = false;
+    Memory* mem = &m_memory;
     const char* t = s;
     bool neg = false;
     int base = 10;
@@ -571,16 +571,16 @@ public:
 
     // Check for program memory address
     if (((int) s) < 0) {
-      progmem = true;
-      s = (const char*) -((int) s);
+      mem = &m_flash;
+      s = mem->as_addr(s);
     }
 
     // Execute operation code in script
-    while ((c = read(s++, progmem)) != 0) {
+    while ((c = mem->read(s++)) != 0) {
 
       // Check for negative numbers
       if (c == '-') {
-	c = read(s, progmem);
+	c = mem->read(s);
 	if (c < '0' || c > '9') {
 	  c = '-';
 	}
@@ -592,11 +592,11 @@ public:
 
       // Check for base prefix
       else if (c == '0') {
-	c = read(s++, progmem);
+	c = mem->read(s++);
 	if (c == 'x') base = 16;
 	else if (c == 'b') base = 2;
 	else s -= 2;
-	c = read(s++, progmem);
+	c = mem->read(s++);
       }
 
       // Check for literal numbers
@@ -607,7 +607,7 @@ public:
 	    val = (val * base) + (c - 'a') + 10;
 	  else
 	    val = (val * base) + (c - '0');
-	  c = read(s++, progmem);
+	  c = mem->read(s++);
 	} while (is_digit(c, base));
 	if (neg) {
 	  val = -val;
@@ -650,46 +650,18 @@ public:
 	{
 	  const char* src = (const char*) pop();
 	  int addr = pop();
-	  if (progmem) {
-	    write(addr, src);
-	  }
-	  else {
-	    char* dest = (char*) malloc(len + 1);
-	    if (dest == NULL) break;
-	    strlcpy(dest, src, len);
-	    write(addr, dest);
-	  }
+	  const char* dest = mem->copy(src, len);
+	  if (dest == NULL) break;
+	  write(addr, dest);
 	}
 	continue;
       case '`': // -- addr | lookup or add variable
 	{
 	  const char* name = s;
 	  size_t len = 0;
-	  int i;
-	  while (((c = read(s++, progmem)) != 0) && isalnum(c)) len++;
+	  while (((c = mem->read(s++)) != 0) && isalnum(c)) len++;
 	  if (len > 0) {
-	    for (i = 0; i != m_dp; i++)
-	      if (progmem) {
-		if (!strncmp_P(m_dict[i], name, len))
-		  break;
-	      }
-	      else {
-		if (!strncmp(m_dict[i], name, len))
-		  break;
-	      }
-	    if (i == m_dp) {
-	      char* dest = (char*) malloc(len + 1);
-	      if (dest != NULL) {
-		if (progmem)
-		  strlcpy_P(dest, name, len + 1);
-		else
-		  strlcpy(dest, name, len + 1);
-		m_dict[i] = dest;
-		m_dp += 1;
-	      }
-	      else
-		i = -1;
-	    }
+	    int i = lookup(name, len, mem->readonly());
 	    if (i != -1 && m_trace) {
 	      m_ios.print(m_dict[i]);
 	      m_ios.print(':');
@@ -701,7 +673,7 @@ public:
 	s = s - 1;
 	continue;
       case '\'': // -- char | push character
-	c = read(s, progmem);
+	c = mem->read(s);
 	if (c != 0) {
 	  push(c);
 	  s += 1;
@@ -710,10 +682,7 @@ public:
       case '{': // -- block | start code block
 	left = '{';
 	right = '}';
-	if (progmem)
-	  push(-((int) s));
-	else
-	  push(s);
+	push(mem->as_addr(s));
 	break;
       case '(': // -- | start output string
 	left = '(';
@@ -738,7 +707,7 @@ public:
       // Parse special parenphesis forms (allow nesting)
       if (left) {
 	int n = 1;
-	while ((n != 0) && ((c = read(s++, progmem)) != 0)) {
+	while ((n != 0) && ((c = mem->read(s++)) != 0)) {
 	  if (c == left) n++;
 	  else if (c == right) n--;
 	  if (left == '(' && n > 0) m_ios.print(c);
@@ -759,10 +728,15 @@ public:
       if (execute(c)) continue;
 
       // Check for trap operation code
-      if (c != TRAP_CHAR) break;
-      const char* p = trap(s);
-      if (p == NULL) break;
-      s = p;
+      if (c == TRAP_CHAR) {
+	const char* p = trap(s);
+	if (p == NULL) break;
+	s = p;
+      }
+      else {
+	s = s - 1;
+	break;
+      }
     }
 
     // Restore frame pointer
@@ -905,19 +879,83 @@ protected:
   }
 
   /**
-   * Read next operation code from random access or program memory.
-   * @param[in] s script pointer.
-   * @param[in] progmem program memory flag.
-   * @return operation code.
+   * Lookup given name with given length in dictionary. Append if not
+   * found. Return dictionary index.
+   * @param[in] name to lookup in dictionary.
+   * @param[in] len number of characters in name.
+   * @param[in] progmem true if name is in program memory.
+   * @return dictionary entry index or negative error code.
    */
-  char read(const char* s, bool progmem)
+  int lookup(const char* name, size_t len, bool progmem)
   {
-    if (progmem)
-      return (pgm_read_byte(s));
-    else
-      return (*s);
+    int i = 0;
+    for (; i != m_dp; i++)
+      if (progmem) {
+	if (!strncmp_P(m_dict[i], name, len))
+	break;
+      }
+      else {
+	if (!strncmp(m_dict[i], name, len))
+	  break;
+      }
+    if (i == m_dp) {
+      char* dest = (char*) malloc(len + 1);
+      if (dest == NULL) return (-1);
+      if (progmem)
+	strlcpy_P(dest, name, len + 1);
+      else
+	strlcpy(dest, name, len + 1);
+      m_dict[i] = dest;
+      m_dp += 1;
+    }
+    return (i);
   }
 
+  /**
+   * Memory access class to allow scripts in various types of memory;
+   * random access memory, program memory, etc.
+   */
+  class Memory {
+  public:
+    virtual char read(const char* s)
+    {
+      return (*s);
+    };
+    virtual const char* copy(const char* src, size_t len)
+    {
+      char* dest = (char*) malloc(len + 1);
+      if (dest == NULL) return (NULL);
+      strlcpy(dest, src, len);
+      return (dest);
+    }
+    virtual bool readonly()
+    {
+      return (false);
+    }
+    virtual const char* as_addr(const char* src)
+    {
+      return (src);
+    }
+  } m_memory;
+
+  class Flash : public Memory {
+    virtual char read(const char* s)
+    {
+      return (pgm_read_byte(s));
+    };
+    virtual const char* copy(const char* src, size_t)
+    {
+      return (src);
+    }
+    virtual bool readonly()
+    {
+      return (true);
+    }
+    virtual const char* as_addr(const char* src)
+    {
+      return ((const char*) -((int) src));
+    }
+  } m_flash;
 };
 
 #endif

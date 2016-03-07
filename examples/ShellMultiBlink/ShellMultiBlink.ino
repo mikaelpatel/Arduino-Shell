@@ -34,17 +34,17 @@ void setup()
   // : multiblink ( -- )
   // 13 output 12 output 11 output
   // {
-  //   1000 `timer1 ?expired { 13 toggle } if
-  //    300 `timer2 ?expired { 12 toggle } if
-  //    100 `timer3 ?expired { 11 toggle } if
+  //   500 `timer1 ?expired { 13 toggle } if
+  //   300 `timer2 ?expired { 12 toggle } if
+  //    10 `timer3 ?expired { 11 toggle } if
   //   true
   // } while;
 
   Script multiblink =
     SCRIPT("13O,12O,11O"
-	   "{1000`timer1,E{13X}i"
+	   "{500`timer1,E{13X}i"
 	    "300`timer2,E{12X}i"
-	    "100`timer3,E{11X}i"
+	     "10`timer3,E{11X}i"
 	    "T}w");
   shell.execute(multiblink);
 }
