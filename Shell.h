@@ -20,13 +20,13 @@
 #define SHELL_H
 
 /** Script strings in program memory */
-typedef const class __FlashStringHelper* Script;
+class __Script;
 
 /**
  * Create a shell script with given string in program memory.
  * @param[in] s script string.
  */
-#define SCRIPT(s) (Script) F(s)
+#define SCRIPT(s) ((__Script*) PSTR(s))
 
 /**
  * Script Shell with stack machine instruction set. Instructions are
@@ -95,20 +95,20 @@ public:
 
   /**
    * Set top of stack to given value.
-   * @param[in] val to set.
+   * @param[in] value to set.
    */
-  void tos(int val)
+  void tos(int value)
   {
-    m_tos = val;
+    m_tos = value;
   }
 
   /**
    * Set top of stack to given value.
-   * @param[in] val to set.
+   * @param[in] s to set.
    */
-  void tos(const char* val)
+  void tos(const char* s)
   {
-    m_tos = (int) val;
+    m_tos = (int) s;
   }
 
   /**
@@ -132,17 +132,17 @@ public:
 
   /**
    * Push given value onto the parameter stack.
-   * @param[in] val to push.
+   * @param[in] value to push.
    */
-  void push(int val)
+  void push(int value)
   {
     if (depth() != STACK_MAX) *--m_sp = m_tos;
-    m_tos = val;
+    m_tos = value;
   }
 
   /**
    * Push given value onto the parameter stack.
-   * @param[in] val to push.
+   * @param[in] s string to push.
    */
   void push(const char* s)
   {
@@ -160,13 +160,13 @@ public:
   /**
    * Print parameter stack contents in format: n: xn..x1
    */
-  void print()
+  void print() const
   {
     int n = depth();
     m_ios.print(n);
     m_ios.print(':');
     if (n > 0) {
-      int* tp = m_stack + STACK_MAX - 1;
+      const int* tp = m_stack + STACK_MAX - 1;
       while (--n) {
 	m_ios.print(' ');
 	m_ios.print(*--tp);
@@ -182,7 +182,7 @@ public:
    * @param[in] addr address.
    * @return value.
    */
-  int read(int addr)
+  int read(int addr) const
   {
     if (addr < 0 || addr >= (VAR_MAX + STACK_MAX)) return (0);
     return (m_var[addr]);
@@ -191,12 +191,12 @@ public:
   /**
    * Write variable.
    * @param[in] addr address.
-   * @param[in] val value.
+   * @param[in] value to assign.
    */
-  void write(int addr, int val)
+  void write(int addr, int value)
   {
     if (addr < 0 || addr >= (VAR_MAX + STACK_MAX)) return;
-    m_var[addr] = val;
+    m_var[addr] = value;
   }
 
   /**
@@ -235,7 +235,7 @@ public:
   bool execute(char op)
   {
     const char* script;
-    int pin, addr, val, n;
+    int pin, addr, w, n;
     switch (op) {
     /*
      *   Arithmetic operators.
@@ -244,29 +244,29 @@ public:
       tos(-tos());
       break;
     case '+': // x y -- x+y | addition
-      val = pop();
-      tos(tos() + val);
+      w = pop();
+      tos(tos() + w);
       break;
     case '-': // x y -- x-y | subtraction
-      val = pop();
-      tos(tos() - val);
+      w = pop();
+      tos(tos() - w);
       break;
     case '*': // x y -- x*y | multiplication
-      val = pop();
-      tos(tos() * val);
+      w = pop();
+      tos(tos() * w);
       break;
     case '/': // x y -- x/y | division
-      val = pop();
-      tos(tos() / val);
+      w = pop();
+      tos(tos() / w);
       break;
     case '%': // x y -- x%y | modulo
-      val = pop();
-      tos(tos() % val);
+      w = pop();
+      tos(tos() % w);
       break;
     case 'h': // x y z -- x*y/z | scale
-      val = pop();
+      w = pop();
       n = pop();
-      tos(tos() * ((long) n) / val);
+      tos(tos() * ((long) n) / w);
       break;
     /*
      *  Comparison/relational operators.
@@ -278,20 +278,20 @@ public:
       push(-1);
       break;
     case '=': // x y -- x==y | equal
-      val = pop();
-      tos(as_bool(tos() == val));
+      w = pop();
+      tos(as_bool(tos() == w));
       break;
     case '#': // x y -- x!=y | not equal
-      val = pop();
-      tos(as_bool(tos() != val));
+      w = pop();
+      tos(as_bool(tos() != w));
       break;
     case '<': // x y -- x<y | less than
-      val = pop();
-      tos(as_bool(tos() < val));
+      w = pop();
+      tos(as_bool(tos() < w));
       break;
     case '>': // x y -- x>y | greater than
-      val = pop();
-      tos(as_bool(tos() > val));
+      w = pop();
+      tos(as_bool(tos() > w));
       break;
     /*
      *  Bitwise/logical operators.
@@ -300,16 +300,16 @@ public:
       tos(~tos());
       break;
     case '&': // x y -- x&y | bitwise and
-      val = pop();
-      tos(tos() & val);
+      w = pop();
+      tos(tos() & w);
       break;
     case '|': // x y -- x|y | bitwise or
-      val = pop();
-      tos(tos() | val);
+      w = pop();
+      tos(tos() | w);
       break;
     case '^': // x y -- x^y | bitwise xor
-      val = pop();
-      tos(tos() ^ val);
+      w = pop();
+      tos(tos() ^ w);
       break;
     /*
      * Stack operations.
@@ -342,15 +342,15 @@ public:
       tos(*(m_sp + tos() - 1));
       break;
     case 'r': // x y z --- y z x | rotate
-      val = tos();
+      w = tos();
       tos(*(m_sp + 1));
       *(m_sp + 1) = *m_sp;
-      *m_sp = val;
+      *m_sp = w;
       break;
     case 's': // x y -- y x | swap
-      val = tos();
+      w = tos();
       tos(*m_sp);
-      *m_sp = val;
+      *m_sp = w;
       break;
     case 'q': // x -- [x x] or 0 | duplicate if not zero
       if (tos() == 0) break;
@@ -360,13 +360,13 @@ public:
     /*
      * Memory access operations.
      */
-    case '@': // addr -- val | read variable
+    case '@': // addr -- value | read variable
       tos(read(tos()));
       break;
-    case '!': // val addr -- | write variable
+    case '!': // value addr -- | write variable
       addr = pop();
-      val = pop();
-      write(addr, val);
+      w = pop();
+      write(addr, w);
       break;
     /*
      * Script/control structure operations.
@@ -378,8 +378,8 @@ public:
       if (execute(script) != NULL) return (false);
       break;
     case 'e': // flag if-block else-block -- | execute block on flag
-      val = *(m_sp + 1);
-      if (val != 0) {
+      w = *(m_sp + 1);
+      if (w != 0) {
 	drop();
 	script = (const char*) pop();
       }
@@ -447,22 +447,22 @@ public:
      * Input/output operations.
      */
     case 'k': // -- char | blocking read from input stream
-      while ((val = m_ios.read()) < 0) yield();
-      push(val);
+      while ((w = m_ios.read()) < 0) yield();
+      push(w);
       break;
     case '?': // addr -- | print variable
       tos(read(tos()));
     case '.': // x -- | print number followed by one space
-      val = pop();
-      m_ios.print(val);
+      w = pop();
+      m_ios.print(w);
       m_ios.print(' ');
       break;
     case 'm': // -- | write new line to output stream
       m_ios.println();
       break;
     case 'v': // char -- | write character to output stream
-      val = pop();
-      m_ios.write(val);
+      w = pop();
+      m_ios.write(w);
       break;
     /*
      * Arduino operations.
@@ -475,14 +475,14 @@ public:
       clear();
       break;
     case 'D': // ms -- | delay()
-      val = pop();
-      delay((unsigned) val);
+      w = pop();
+      delay((unsigned) w);
       break;
     case 'E': // period addr -- bool | time-out
       addr = pop();
-      val = read(addr);
+      w = read(addr);
       n = tos();
-      if ((((unsigned) millis() & 0xffff) - ((unsigned) val)) >= ((unsigned) n)) {
+      if ((((unsigned) millis() & 0xffff) - ((unsigned) w)) >= ((unsigned) n)) {
 	tos(-1);
 	write(addr, millis());
       }
@@ -497,11 +497,11 @@ public:
       pinMode(pin, INPUT);
       break;
     case 'K': // -- [char true] or false | non-blocking read from input stream
-      val = m_ios.read();
-      if (val < 0) {
+      w = m_ios.read();
+      if (w < 0) {
 	push(0);
       } else {
-	push(val);
+	push(w);
 	push(-1);
       }
       break;
@@ -520,8 +520,8 @@ public:
       break;
     case 'P': // value pin -- | analogWrite(pin, value)
       pin = pop();
-      val = pop();
-      analogWrite(pin, val);
+      w = pop();
+      analogWrite(pin, w);
       break;
     case 'R': // pin -- bool | digitalRead(pin)
       pin = tos();
@@ -536,8 +536,8 @@ public:
       break;
     case 'W': // value pin -- | digitalWrite(pin, value)
       pin = pop();
-      val = pop();
-      digitalWrite(pin, val);
+      w = pop();
+      digitalWrite(pin, w);
       break;
     case 'X': // pin -- | digitalToggle(pin)
       pin = pop();
@@ -556,83 +556,83 @@ public:
    * Execute given script (null terminated sequence of operation
    * codes). Return NULL if successful otherwise script reference that
    * failed. Prints error position in trace mode.
-   * @param[in] s script.
+   * @param[in] script.
    * @return script reference or NULL.
    */
-  const char* execute(const char* s)
+  const char* execute(const char* script)
   {
     Memory* mem = &m_memory;
-    const char* t = s;
+    const char* ip = script;
     bool neg = false;
     int base = 10;
     int* fp = m_fp;
     size_t len = 0;
-    char c;
+    char op;
 
     // Check for program memory address
-    if (((int) s) < 0) {
+    if (is_progmem(ip)) {
       mem = &m_flash;
-      s = mem->as_addr(s);
+      ip = mem->as_addr(ip);
     }
 
     // Execute operation code in script
-    while ((c = mem->read(s++)) != 0) {
+    while ((op = mem->read(ip++)) != 0) {
 
       // Check for negative numbers
-      if (c == '-') {
-	c = mem->read(s);
-	if (c < '0' || c > '9') {
-	  c = '-';
+      if (op == '-') {
+	op = mem->read(ip);
+	if (op < '0' || op > '9') {
+	  op = '-';
 	}
 	else {
 	  neg = true;
-	  s += 1;
+	  ip += 1;
 	}
       }
 
       // Check for base prefix
-      else if (c == '0') {
-	c = mem->read(s++);
-	if (c == 'x') base = 16;
-	else if (c == 'b') base = 2;
-	else s -= 2;
-	c = mem->read(s++);
+      else if (op == '0') {
+	op = mem->read(ip++);
+	if (op == 'x') base = 16;
+	else if (op == 'b') base = 2;
+	else ip -= 2;
+	op = mem->read(ip++);
       }
 
       // Check for literal numbers
-      if (is_digit(c, base)) {
-	int val = 0;
+      if (is_digit(op, base)) {
+	int w = 0;
 	do {
-	  if (base == 16 && c >= 'a')
-	    val = (val * base) + (c - 'a') + 10;
+	  if (base == 16 && op >= 'a')
+	    w = (w * base) + (op - 'a') + 10;
 	  else
-	    val = (val * base) + (c - '0');
-	  c = mem->read(s++);
-	} while (is_digit(c, base));
+	    w = (w * base) + (op - '0');
+	  op = mem->read(ip++);
+	} while (is_digit(op, base));
 	if (neg) {
-	  val = -val;
+	  w = -w;
 	  neg = false;
 	}
-	push(val);
+	push(w);
 	base = 10;
-	if (c == 0) break;
+	if (op == 0) break;
       }
 
       // Translate newline (for trace mode)
-      if (c == '\n') c = 'N';
+      if (op == '\n') op = 'N';
 
       // Check for trace mode
       if (m_trace) {
-	const class __FlashStringHelper* str = as_fstr(c);
+	const class __FlashStringHelper* str = as_fstr(op);
 	m_ios.print(++m_cycle);
 	m_ios.print(':');
-	m_ios.print((int) s - 1);
+	m_ios.print((int) ip - 1);
 	m_ios.print(':');
 	if (str == NULL)
-	  m_ios.print(c);
+	  m_ios.print(op);
 	else
 	  m_ios.print(str);
-	if (c != '`') {
+	if (op != '`') {
 	  m_ios.print(':');
 	  print();
 	}
@@ -640,7 +640,7 @@ public:
 
       // Check for special forms
       char left = 0, right;
-      switch (c) {
+      switch (op) {
       case ' ': // -- | no operation
       case ',':
 	continue;
@@ -657,9 +657,9 @@ public:
 	continue;
       case '`': // -- addr | lookup or add variable
 	{
-	  const char* name = s;
+	  const char* name = ip;
 	  size_t len = 0;
-	  while (((c = mem->read(s++)) != 0) && isalnum(c)) len++;
+	  while (((op = mem->read(ip++)) != 0) && isalnum(op)) len++;
 	  if (len > 0) {
 	    int i = lookup(name, len, mem->readonly());
 	    if (i != -1 && m_trace) {
@@ -670,19 +670,19 @@ public:
 	    push(i);
 	  }
 	}
-	s = s - 1;
+	ip = ip - 1;
 	continue;
       case '\'': // -- char | push character
-	c = mem->read(s);
-	if (c != 0) {
-	  push(c);
-	  s += 1;
+	op = mem->read(ip);
+	if (op != 0) {
+	  push(op);
+	  ip += 1;
 	}
 	continue;
       case '{': // -- block | start code block
 	left = '{';
 	right = '}';
-	push(mem->as_addr(s));
+	push(mem->as_addr(ip));
 	break;
       case '(': // -- | start output string
 	left = '(';
@@ -707,34 +707,34 @@ public:
       // Parse special parenphesis forms (allow nesting)
       if (left) {
 	int n = 1;
-	while ((n != 0) && ((c = mem->read(s++)) != 0)) {
-	  if (c == left) n++;
-	  else if (c == right) n--;
-	  if (left == '(' && n > 0) m_ios.print(c);
+	while ((n != 0) && ((op = mem->read(ip++)) != 0)) {
+	  if (op == left) n++;
+	  else if (op == right) n--;
+	  if (left == '(' && n > 0) m_ios.print(op);
 	}
-	if (c == '}') {
+	if (op == '}') {
 	  const char* src = (const char*) tos();
-	  len = s - src;
+	  len = ip - src;
 	}
-	if (c == 0) {
-	  s -= 1;
-	  c = left;
+	if (op == 0) {
+	  ip = ip - 1;
+	  op = left;
 	  break;
 	}
 	continue;
       }
 
       // Execute operation code
-      if (execute(c)) continue;
+      if (execute(op)) continue;
 
       // Check for trap operation code
-      if (c == TRAP_CHAR) {
-	const char* p = trap(s);
+      if (op == TRAP_OP_CODE) {
+	const char* p = trap(ip);
 	if (p == NULL) break;
-	s = p;
+	ip = p;
       }
       else {
-	s = s - 1;
+	ip = ip - 1;
 	break;
       }
     }
@@ -743,33 +743,33 @@ public:
     m_fp = fp;
 
     // Check for no errors
-    if (c != '}') m_cycle = 0;
-    if (c == 0 || c == '}') return (NULL);
+    if (op != '}') m_cycle = 0;
+    if (op == 0 || op == '}') return (NULL);
 
     // Check for trace mode and error print
     if (m_trace) {
-      size_t len = strlen(t) - 1;
-      m_ios.print(t);
-      if (t[len] != '\n') m_ios.println();
-      for (int i = 0, n = s - t; i < n; i++)
+      size_t len = strlen(script) - 1;
+      m_ios.print(script);
+      if (script[len] != '\n') m_ios.println();
+      for (int i = 0, n = ip - script; i < n; i++)
 	m_ios.print(' ');
       m_ios.println(F("^--?"));
     }
 
     // Return error position
-    return (s);
+    return (ip);
   }
 
   /**
    * Execute given script in program memory (null terminated sequence
    * of operation codes). Return NULL if successful otherwise script
    * reference that failed. Prints error position in trace mode.
-   * @param[in] s program memory based script.
+   * @param[in] script program memory based script.
    * @return script reference or NULL.
    */
-  const char* execute(Script s)
+  const char* execute(__Script* script)
   {
-    return (execute((const char*) (-(int) s)));
+    return (execute((const char*) (-(int) script)));
   }
 
   /**
@@ -784,7 +784,9 @@ public:
   }
 
 protected:
-  static const char TRAP_CHAR = '_';
+  /** Trap operation code prefix. */
+  static const char TRAP_OP_CODE = '_';
+
   int m_dp;			//!< Next free dictionary entry.
   int* m_fp;			//!< Frame pointer.
   int* m_sp;			//!< Stack pointer.
@@ -802,9 +804,19 @@ protected:
    * @param[in] val value.
    * @return bool.
    */
-  int as_bool(int val)
+  int as_bool(int value)
   {
-    return (val ? -1 : 0);
+    return (value ? -1 : 0);
+  }
+
+  /**
+   * Return true if script pointer is in program memory.
+   * @param[in] s script pointer.
+   * @return bool.
+   */
+  bool is_progmem(const char* s)
+  {
+    return (((int) s) < 0);
   }
 
   /**
