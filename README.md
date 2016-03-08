@@ -104,7 +104,7 @@ h | x y z -- (x*y)/z | scale | */
 i | flag block -- | execute block if flag is true | IF THEN
 j | xn..x1 -- xn..x1 n | stack depth | DEPTH
 k | -- char | read character from input stream  | KEY
-l | low high block( i -- ) -- | execute block from low to high | DO LOOP
+l | low high block( index -- ) -- | execute block from low to high | DO LOOP
 m | -- | write new line to output stream | CR
 n | x -- -x | negate | NEGATE
 o | x y -- x y x | over | OVER
