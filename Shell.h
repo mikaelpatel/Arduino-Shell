@@ -210,7 +210,7 @@ public:
   }
 
   /**
-   * Define a script variable.
+   * Define a variable.
    * @param[in] name string.
    * @param[in] value.
    * @return index or negative error code.
