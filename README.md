@@ -104,7 +104,7 @@ h | x y z -- (x*y)/z | scale | */
 i | flag block -- | execute block if flag is true | IF THEN
 j | xn..x1 -- xn..x1 n | stack depth | DEPTH
 k | -- char | read character from input stream  | KEY
-l | n block -- | execute block n-times | DO LOOP
+l | low high block( i -- ) -- | execute block from low to high | DO LOOP
 m | -- | write new line to output stream | CR
 n | x -- -x | negate | NEGATE
 o | x y -- x y x | over | OVER
@@ -232,10 +232,14 @@ the control structures with full instruction names.
  bool { if-block } if
  bool { if-block } { else-block } ifelse
 
- n { loop-block } loop
+ low high { index loop-block } loop
 
  { while-block bool } while
 ```
+The `loop-block` will recieve the current index on top of parameter
+stack. The `while-block` should push a non-zero value to continue the
+while loop otherwise zero (false) to terminate the loop.
+
 The instructions are _i_ for `if`, _e_ for `ifelse`, _l_ for `loop`
 and _w_ for `while`.
 
@@ -350,29 +354,29 @@ Script:
 
 Read analog pins and print value in format "An = value".
 ```
- 0 5 { ." A" dup . ." =" dup analogRead . cr 1+ } loop drop
+ 0 4 { ." A" dup . ." =" analogRead . cr } loop
 ```
 Script:
 ```
- 0,5{(A)u.(= )uA.m1+}ld
+ 0,4{(A)u.(= )A.m}l
 ```
 ### Continously Read Analog Pins
 
 Read analog pins (0..4) and print value continuously with 100 ms delay.
 ```
  {
-   0 5
+   0 4
    {
-     dup analogRead . 1+
+     analogRead .
    } loop
-   cr drop
+   cr
    100 delay
    true
  } while
 ```
 Script:
 ```
- {0,5{uA.1+}lmd100DT}w
+ {0,4{A.}lm100DT}w
 ```
 
 ### Termostat

@@ -215,7 +215,7 @@ public:
    * @param[in] value.
    * @return index or negative error code.
    */
-  int def(const char* name, int value = 0)
+  int set(const char* name, int value = 0)
   {
     size_t len = strlen(name);
     int i = 0;
@@ -237,9 +237,9 @@ public:
    * @param[in] script in program memory.
    * @return index or negative error code.
    */
-  int def(const char* name, Script* script)
+  int set(const char* name, Script* script)
   {
-    return (def(name, -(int) script));
+    return (set(name, -(int) script));
   }
 
   /**
@@ -256,6 +256,7 @@ public:
     *bp++ = c;
     if (c != '\n') return (false);
     *bp = 0;
+    m_cycle = 0;
     return (true);
   }
 
@@ -431,11 +432,16 @@ public:
       script = (const char*) pop();
       if (pop() && execute(script) != NULL) return (false);
       break;
-    case 'l': // n block -- | execute block n-times
-      script = (const char*) pop();
-      n = pop();
-      while (n--)
-	if (execute(script) != NULL) return (false);
+    case 'l': // low high block( i -- ) -- | execute block from low to high
+      {
+	script = (const char*) pop();
+	int high = pop();
+	int low = pop();
+	for (int i = low; i <= high; i++) {
+	  push(i);
+	  if (execute(script) != NULL) return (false);
+	}
+      }
       break;
     case 'w': // block( -- flag) -- | execute block while
       script = (const char*) pop();
@@ -776,7 +782,6 @@ public:
     m_fp = fp;
 
     // Check for no errors
-    if (op != '}') m_cycle = 0;
     if (op == 0 || op == '}') return (NULL);
 
     // Check for trace mode and error print

@@ -31,11 +31,11 @@ void setup()
 
   // Periodically (100 ms) read analog pins (0..4) and write value.
   // {
-  //   0 5 { dup analogRead . 1+ } loop drop cr
+  //   0 4 { analogRead . } loop cr
   //   100 delay true
   // } while
 
-  shell.execute(SCRIPT("{0,5{uA.1+}ldm100DT}w"));
+  shell.execute(SCRIPT("{0,4{A.}lm100DT}w"));
 }
 
 void loop()

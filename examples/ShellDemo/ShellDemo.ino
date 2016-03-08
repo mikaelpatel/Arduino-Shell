@@ -33,8 +33,8 @@ void setup()
   Serial.begin(57600);
   while (!Serial);
   Serial.println(F("ShellDemo: started, use [Newline] mode"));
+  shell.set("blinks", SCRIPT("uOr{uHoDuLoD}ldd"));
   shell.trace(true);
-  shell.def("blinks", SCRIPT("uOr{uHoDuLoD}ldd"));
 }
 
 void loop()
