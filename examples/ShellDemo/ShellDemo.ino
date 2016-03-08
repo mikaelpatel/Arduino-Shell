@@ -34,6 +34,7 @@ void setup()
   while (!Serial);
   Serial.println(F("ShellDemo: started, use [Newline] mode"));
   shell.trace(true);
+  shell.def("blinks", SCRIPT("uOr{uHoDuLoD}ldd"));
 }
 
 void loop()

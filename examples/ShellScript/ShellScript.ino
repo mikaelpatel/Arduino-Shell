@@ -31,16 +31,17 @@ void setup()
   while (!Serial);
   Serial.println(F("ShellScript: started"));
 
+  // Trace shell commands
+  shell.trace(true);
+
   // : blinks ( n ms pin -- )
   //   dup output
   //   rot { dup high over delay dup low over delay } loop
   //   drop drop ;
-  shell.execute(SCRIPT("`blinks{uOr{uHoDuLoD}ldd};"));
+  shell.def("blinks", SCRIPT("uOr{uHoDuLoD}ldd"));
 
   // 5 1000 13 blinks
-  shell.trace(true);
   shell.execute(SCRIPT("5,1000,13`blinks:"));
-  shell.trace(false);
 
   // : monitor ( buttonPin ledPin -- )
   //   over inputPullup
@@ -51,12 +52,10 @@ void setup()
   //      over high dup delay over low delay
   //      true
   //   } while ;
-  shell.execute(SCRIPT("`monitor{oUuO{oR{1000}{200}eoHuDoLDT}w};"));
+  shell.def("monitor", SCRIPT("oUuO{oR{1000}{200}eoHuDoLDT}w"));
 
   // 2 13 monitor
-  shell.trace(true);
   shell.execute(SCRIPT("2,13`monitor:"));
-  shell.trace(false);
 }
 
 void loop()

@@ -210,6 +210,39 @@ public:
   }
 
   /**
+   * Define a script variable.
+   * @param[in] name string.
+   * @param[in] value.
+   * @return index or negative error code.
+   */
+  int def(const char* name, int value = 0)
+  {
+    size_t len = strlen(name);
+    int i = 0;
+    for (; i != m_dp; i++)
+      if (!strncmp(m_dict[i], name, len))
+	break;
+    if (i == VAR_MAX) return (-1);
+    if (i == m_dp) {
+      m_dict[i] = name;
+      m_dp += 1;
+    }
+    m_var[i] = value;
+    return (i);
+  }
+
+  /**
+   * Define a script variable.
+   * @param[in] name string.
+   * @param[in] script in program memory.
+   * @return index or negative error code.
+   */
+  int def(const char* name, Script* script)
+  {
+    return (def(name, -(int) script));
+  }
+
+  /**
    * Non-blocking read next character from shell stream. If available
    * add to buffer. If newline was read the buffer is null-terminated
    * and true is returned, otherwise false.
@@ -775,7 +808,7 @@ public:
   /**
    * Execute script with extended operation code (character). Return
    * next script reference if successful otherwise NULL.
-   * @param[in] s script.
+   * @param[in] ip script.
    * @return script reference or NULL.
    */
   virtual const char* trap(const char*)
@@ -795,7 +828,7 @@ protected:
   bool m_trace;			//!< Trace mode.
   unsigned m_cycle;		//!< Cycle counter.
   Stream& m_ios;		//!< Input/output Stream.
-  char* m_dict[VAR_MAX];	//!< Dictionary.
+  const char* m_dict[VAR_MAX];	//!< Dictionary.
   int m_var[VAR_MAX];		//!< Variable table.
   int m_stack[STACK_MAX];	//!< Parameter stack.
 

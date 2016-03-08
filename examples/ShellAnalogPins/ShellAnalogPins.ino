@@ -35,7 +35,7 @@ void setup()
   //   100 delay true
   // } while
 
-  shell.execute("{0,5{uA.1+}ldm100DT}w");
+  shell.execute(SCRIPT("{0,5{uA.1+}ldm100DT}w"));
 }
 
 void loop()

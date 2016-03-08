@@ -40,13 +40,15 @@ void setup()
   //   true
   // } while;
 
-  Script* multiblink =
-    SCRIPT("13O,12O,11O"
-	   "{500`timer1,E{13X}i"
-	    "300`timer2,E{12X}i"
-	     "10`timer3,E{11X}i"
-	    "T}w");
-  shell.execute(multiblink);
+  shell.def("multiblink",
+	    SCRIPT("13O,12O,11O"
+		   "{"
+		   "500`timer1,E{13X}i"
+		   "300`timer2,E{12X}i"
+		   "10`timer3,E{11X}i"
+		   "T"
+		   "}w"));
+  shell.execute(SCRIPT("`multiblink:"));
 }
 
 void loop()

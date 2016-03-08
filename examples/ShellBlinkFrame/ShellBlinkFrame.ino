@@ -30,6 +30,7 @@ void setup()
   Serial.begin(57600);
   while (!Serial);
   Serial.println(F("ShellBlinkFrame: started"));
+  shell.trace(true);
 
   // : blink ( ms pin -- )
   //   pin output
@@ -38,13 +39,10 @@ void setup()
   //      pin low ms delay
   //      true
   //   } while ;
-  Script* blink = SCRIPT("2\\2$@O{2$@H1$@D2$@L1$@DT}w");
+  shell.def("blink", SCRIPT("2\\2$@O{2$@H1$@D2$@L1$@DT}w"));
 
   // 1000 13 blink
-  shell.trace(true);
-  shell.push(1000);
-  shell.push(13);
-  shell.execute(blink);
+  shell.execute(SCRIPT("1000,13`blink:"));
 }
 
 void loop()
