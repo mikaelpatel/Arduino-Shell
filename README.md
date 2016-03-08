@@ -7,7 +7,7 @@ possible to write small scripts directly without a token compiler. As
 Forth scripts are written in Reverse Polish Notation (RPN), and
 executed in the given order.
 
-![screenshot](https://dl.dropboxusercontent.com/u/993383/Cosa/screenshots/Screenshot%20from%202016-02-29%2011%3A00%3A13.png)
+![screenshot](https://dl.dropboxusercontent.com/u/993383/Cosa/screenshots/Screenshot%20from%202016-02-26%2015%3A15%3A48.png)
 
 Shell has built-in instruction level trace to aid script debugging and
 performance tuning. It prints the instruction cycle count, script
