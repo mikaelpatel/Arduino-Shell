@@ -930,7 +930,7 @@ protected:
     case 'v': return (F("emit"));
     case 'w': return (F("while"));
     case 'x': return (F("execute"));
-    case 'y': return (F("yield"));
+    case 'z': return (F("zap"));
     case 'A': return (F("analogRead"));
     case 'C': return (F("clear"));
     case 'D': return (F("delay"));
@@ -950,6 +950,7 @@ protected:
     case 'U': return (F("inputPullup"));
     case 'W': return (F("digitalWrite"));
     case 'X': return (F("digitalToggle"));
+    case 'Y': return (F("yield"));
     case 'Z': return (F("toggleTraceMode"));
     default:
       return (NULL);
