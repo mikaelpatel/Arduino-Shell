@@ -40,13 +40,13 @@ void setup()
   //   true
   // } while;
 
-  shell.def("multiblink",
+  shell.set(F("multiblink"),
 	    SCRIPT("13O,12O,11O"
 		   "{"
-		   "500`timer1,E{13X}i"
-		   "300`timer2,E{12X}i"
-		   "10`timer3,E{11X}i"
-		   "T"
+ 		     "500`timer1,E{13X}i"
+		     "300`timer2,E{12X}i"
+		     "10`timer3,E{11X}i"
+		     "T"
 		   "}w"));
   shell.execute(SCRIPT("`multiblink:"));
 }

@@ -36,9 +36,9 @@ void setup()
 
   // : blinks ( n ms pin -- )
   //   dup output
-  //   rot { dup high over delay dup low over delay } loop
+  //   rot 1 swap { drop dup high over delay dup low over delay } loop
   //   drop drop ;
-  shell.set("blinks", SCRIPT("uOr{uHoDuLoD}ldd"));
+  shell.set(F("blinks"), SCRIPT("uOr1s{duHoDuLoD}ldd"));
 
   // 5 1000 13 blinks
   shell.execute(SCRIPT("5,1000,13`blinks:"));
@@ -52,7 +52,7 @@ void setup()
   //      over high dup delay over low delay
   //      true
   //   } while ;
-  shell.set("monitor", SCRIPT("oUuO{oR{1000}{200}eoHuDoLDT}w"));
+  shell.set(F("monitor"), SCRIPT("oUuO{oR{1000}{200}eoHuDoLDT}w"));
 
   // 2 13 monitor
   shell.execute(SCRIPT("2,13`monitor:"));

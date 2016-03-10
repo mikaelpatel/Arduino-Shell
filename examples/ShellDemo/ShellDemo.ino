@@ -33,7 +33,26 @@ void setup()
   Serial.begin(57600);
   while (!Serial);
   Serial.println(F("ShellDemo: started, use [Newline] mode"));
-  shell.set("blinks", SCRIPT("uOr{uHoDuLoD}ldd"));
+  Serial.println(F("Type: `demo:"));
+
+  // void blinks(int n, unsigned ms, int pin)
+  // {
+  //   pinMode(pin, OUTPUT);
+  //   for (int i = 0; i < n; i++) {
+  //     digitalWrite(pin, HIGH);
+  //     delay(ms);
+  //     digitalWrite(pin, LOW);
+  //     delay(ms);
+  //   }
+  // }
+
+  // : blinks ( n ms pin -- )
+  //   dup output
+  //   rot 1 swap { drop dup high over delay dup low over delay } loop
+  //   drop drop ;
+
+  shell.set(F("blinks"), SCRIPT("uOr1s{duHoDuLoD}ldd"));
+  shell.execute("`demo{10,1000,13`blinks:};");
   shell.trace(true);
 }
 

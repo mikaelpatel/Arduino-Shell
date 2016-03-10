@@ -44,7 +44,9 @@ public:
    * @param[in] ios input output stream.
    */
   Shell(Stream& ios) :
-    m_dp(0),
+    m_dp((char*) (sizeof(dict_t) * VAR_MAX)),
+    m_dict((dict_t*) sizeof(char*)),
+    m_entries(0),
     m_fp(m_stack + STACK_MAX),
     m_sp(m_stack + STACK_MAX),
     m_tos(0),
@@ -53,8 +55,6 @@ public:
     m_cycle(0),
     m_ios(ios)
   {
-    memset(m_dict, 0, sizeof(m_dict));
-    memset(m_var, 0, sizeof(m_var));
   }
 
   /**
@@ -211,35 +211,40 @@ public:
 
   /**
    * Define a variable.
-   * @param[in] name string.
+   * @param[in] var name string (in program memory).
    * @param[in] value.
    * @return index or negative error code.
    */
-  int set(const char* name, int value = 0)
+  int set(const __FlashStringHelper* var, int value = 0)
   {
-    size_t len = strlen(name);
-    int i = 0;
-    for (; i != m_dp; i++)
-      if (!strncmp(m_dict[i], name, len))
-	break;
-    if (i == VAR_MAX) return (-1);
-    if (i == m_dp) {
-      m_dict[i] = name;
-      m_dp += 1;
-    }
+    char name[NAME_MAX];
+    strcpy_P(name, (const char*) var);
+    int i = lookup(name, strlen(name));
+    if (i < 0) return (i);
     m_var[i] = value;
     return (i);
   }
 
   /**
-   * Define a script variable.
-   * @param[in] name string.
+   * Define a script variable/function.
+   * @param[in] var name string.
+   * @param[in] script string.
+   * @return index or negative error code.
+   */
+  int set(const __FlashStringHelper* var, const char* script)
+  {
+    return (set(var, (int) script));
+  }
+
+  /**
+   * Define a script variable/function with script in program memory.
+   * @param[in] var name string.
    * @param[in] script in program memory.
    * @return index or negative error code.
    */
-  int set(const char* name, Script* script)
+  int set(const __FlashStringHelper* var, Script* script)
   {
-    return (set(name, -(int) script));
+    return (set(var, -(int) script));
   }
 
   /**
@@ -600,19 +605,13 @@ public:
    */
   const char* execute(const char* script)
   {
-    Memory* mem = &m_memory;
-    const char* ip = script;
+    Memory* mem = access(script);
+    const char* ip = mem->as_index(script);
     bool neg = false;
     int base = 10;
     int* fp = m_fp;
     size_t len = 0;
     char op;
-
-    // Check for program memory address
-    if (is_progmem(ip)) {
-      mem = &m_flash;
-      ip = mem->as_addr(ip);
-    }
 
     // Execute operation code in script
     while ((op = mem->read(ip++)) != 0) {
@@ -662,11 +661,11 @@ public:
 
       // Check for trace mode
       if (m_trace) {
-	const class __FlashStringHelper* str = as_fstr(op);
 	m_ios.print(++m_cycle);
 	m_ios.print(':');
-	m_ios.print((int) ip - 1);
+	m_ios.print((unsigned) mem->as_addr(ip - 1));
 	m_ios.print(':');
+	const class __FlashStringHelper* str = as_fstr(op);
 	if (str == NULL)
 	  m_ios.print(op);
 	else
@@ -687,22 +686,28 @@ public:
 	return (NULL);
       case ';': // addr block -- | copy block to variable
 	{
+	  const char* dest = m_dp;
 	  const char* src = (const char*) pop();
 	  int addr = pop();
-	  const char* dest = mem->copy(src, len);
-	  if (dest == NULL) break;
-	  write(addr, dest);
+	  eeprom_update_block(src, m_dp, len);
+	  m_dp += len;
+	  eeprom_update_byte((uint8_t*) m_dp, 0);
+	  m_dp += 1;
+	  eeprom_update_block(&m_dp, 0, sizeof(m_dp));
+	  write(addr, m_eeprom.as_addr(dest));
 	}
 	continue;
       case '`': // -- addr | lookup or add variable
 	{
-	  const char* name = ip;
+	  char name[NAME_MAX];
 	  size_t len = 0;
-	  while (((op = mem->read(ip++)) != 0) && isalnum(op)) len++;
+	  while (((op = mem->read(ip++)) != 0) && isalnum(op))
+	    name[len++] = op;
+	  name[len] = 0;
 	  if (len > 0) {
-	    int i = lookup(name, len, mem->readonly());
+	    int i = lookup(name, len);
 	    if (i != -1 && m_trace) {
-	      m_ios.print(m_dict[i]);
+	      m_ios.print(name);
 	      m_ios.print(':');
 	      print();
 	    }
@@ -753,7 +758,7 @@ public:
 	}
 	if (op == '}') {
 	  const char* src = (const char*) tos();
-	  len = ip - src;
+	  len = ip - src - 1;
 	}
 	if (op == 0) {
 	  ip = ip - 1;
@@ -768,9 +773,9 @@ public:
 
       // Check for trap operation code
       if (op == TRAP_OP_CODE) {
-	const char* p = trap(ip);
-	if (p == NULL) break;
-	ip = p;
+	const char* np = trap(ip);
+	if (np == NULL) break;
+	ip = np;
       }
       else {
 	ip = ip - 1;
@@ -785,10 +790,9 @@ public:
     if (op == 0 || op == '}') return (NULL);
 
     // Check for trace mode and error print
-    if (m_trace) {
-      size_t len = strlen(script) - 1;
+    if (m_trace && mem == &m_memory) {
       m_ios.print(script);
-      if (script[len] != '\n') m_ios.println();
+      if (script[strlen(script) - 1] != '\n') m_ios.println();
       for (int i = 0, n = ip - script; i < n; i++)
 	m_ios.print(' ');
       m_ios.println(F("^--?"));
@@ -807,7 +811,7 @@ public:
    */
   const char* execute(Script* script)
   {
-    return (execute((const char*) (-(int) script)));
+    return (execute(m_progmem.as_addr((const char*) script)));
   }
 
   /**
@@ -822,10 +826,21 @@ public:
   }
 
 protected:
+  /** Max length of name. */
+  static const size_t NAME_MAX = 16;
+
   /** Trap operation code prefix. */
   static const char TRAP_OP_CODE = '_';
 
-  int m_dp;			//!< Next free dictionary entry.
+  /** Dictionary entry */
+  struct dict_t {
+    const char* name;		//!< Name string (in eeprom).
+    int value;			//!< Value.
+  };
+
+  char* m_dp;			//!< Dictionary pointer (in eeprom).
+  dict_t* m_dict;		//!< Dictionary (in eeprom).
+  uint8_t m_entries;		//!< Dictionary entries.
   int* m_fp;			//!< Frame pointer.
   int* m_sp;			//!< Stack pointer.
   int m_tos;			//!< Top of stack register.
@@ -833,7 +848,6 @@ protected:
   bool m_trace;			//!< Trace mode.
   unsigned m_cycle;		//!< Cycle counter.
   Stream& m_ios;		//!< Input/output Stream.
-  const char* m_dict[VAR_MAX];	//!< Dictionary.
   int m_var[VAR_MAX];		//!< Variable table.
   int m_stack[STACK_MAX];	//!< Parameter stack.
 
@@ -845,16 +859,6 @@ protected:
   int as_bool(int value)
   {
     return (value ? -1 : 0);
-  }
-
-  /**
-   * Return true if script pointer is in program memory.
-   * @param[in] s script pointer.
-   * @return bool.
-   */
-  bool is_progmem(const char* s)
-  {
-    return (((int) s) < 0);
   }
 
   /**
@@ -929,83 +933,154 @@ protected:
   }
 
   /**
-   * Lookup given name with given length in dictionary. Append if not
-   * found. Return dictionary index.
-   * @param[in] name to lookup in dictionary.
-   * @param[in] len number of characters in name.
-   * @param[in] progmem true if name is in program memory.
-   * @return dictionary entry index or negative error code.
-   */
-  int lookup(const char* name, size_t len, bool progmem)
-  {
-    int i = 0;
-    for (; i != m_dp; i++)
-      if (progmem) {
-	if (!strncmp_P(m_dict[i], name, len))
-	break;
-      }
-      else {
-	if (!strncmp(m_dict[i], name, len))
-	  break;
-      }
-    if (i == m_dp) {
-      char* dest = (char*) malloc(len + 1);
-      if (dest == NULL) return (-1);
-      if (progmem)
-	strlcpy_P(dest, name, len + 1);
-      else
-	strlcpy(dest, name, len + 1);
-      m_dict[i] = dest;
-      m_dp += 1;
-    }
-    return (i);
-  }
-
-  /**
-   * Memory access class to allow scripts in various types of memory;
-   * random access memory, program memory, etc.
+   * Memory access class to allow scripts in various types of memory.
+   * Maps to a linear address space; SRAM, EEPROM(16K), PROGMEM(32K).
    */
   class Memory {
   public:
-    virtual char read(const char* s)
-    {
-      return (*s);
-    };
-    virtual const char* copy(const char* src, size_t len)
-    {
-      char* dest = (char*) malloc(len + 1);
-      if (dest == NULL) return (NULL);
-      strlcpy(dest, src, len);
-      return (dest);
-    }
-    virtual bool readonly()
-    {
-      return (false);
-    }
+    /**
+     * Return local script address mapped to linear address space.
+     * @param src local address.
+     * @return linear address.
+     */
     virtual const char* as_addr(const char* src)
     {
       return (src);
     }
-  } m_memory;
 
-  class Flash : public Memory {
-    virtual char read(const char* s)
-    {
-      return (pgm_read_byte(s));
-    };
-    virtual const char* copy(const char* src, size_t)
+    /**
+     * Return script address mapped to local address space.
+     * @param src linear address.
+     * @return local address.
+     */
+    virtual const char* as_index(const char* src)
     {
       return (src);
     }
-    virtual bool readonly()
+
+    /**
+     * Read byte from given local address.
+     * @param src local address.
+     * @return byte.
+     */
+    virtual char read(const char* src)
     {
-      return (true);
-    }
+      return (*src);
+    };
+
+  } m_memory;
+
+  class ProgramMemory : public Memory {
+  public:
+    /**
+     * Return local script address mapped to linear address space.
+     * @param src local address.
+     * @return linear address.
+     */
     virtual const char* as_addr(const char* src)
     {
       return ((const char*) -((int) src));
     }
-  } m_flash;
+
+    /**
+     * Return script address mapped to local address space.
+     * @param src linear address.
+     * @return local address.
+     */
+    virtual const char* as_index(const char* src)
+    {
+      return ((const char*) -((int) src));
+    }
+
+    /**
+     * Read byte from given local address.
+     * @param src local address.
+     * @return byte.
+     */
+    virtual char read(const char* src)
+    {
+      return (pgm_read_byte(src));
+    };
+  } m_progmem;
+
+  class EEPROM : public Memory {
+  public:
+    /**
+     * Return local script address mapped to linear address space.
+     * @param src local address.
+     * @return linear address.
+     */
+    virtual const char* as_addr(const char* src)
+    {
+      return (src + 0x4000);
+    }
+
+    /**
+     * Return script address mapped to local address space.
+     * @param src linear address.
+     * @return local address.
+     */
+    virtual const char* as_index(const char* src)
+    {
+      return (src - 0x4000);
+    }
+
+    /**
+     * Read byte from given local address.
+     * @param src local address.
+     * @return byte.
+     */
+    virtual char read(const char* src)
+    {
+      return (eeprom_read_byte((const uint8_t*) src));
+    };
+  } m_eeprom;
+
+  /**
+   * Return memory access handler for given script pointer (access factory).
+   * @param[in] s script pointer.
+   * @return memory access.
+   */
+  Memory* access(const char* ip)
+  {
+    Memory* mem = &m_memory;
+    if (((int) ip) < 0)
+      mem = &m_progmem;
+    else if (ip > (const char*) 0x4000)
+      mem = &m_eeprom;
+    return (mem);
+  }
+
+  /**
+   * Lookup given name in dictionary. Return entry index or negative
+   * error code.
+   * @param[in] name string.
+   * @param[in] len length of string.
+   * @return entry index or negative error code.
+   */
+  int lookup(const char* name, size_t len)
+  {
+    int i = 0;
+    for (; i < m_entries; i++) {
+      const char* np =
+	(const char*) eeprom_read_word((const uint16_t*) &m_dict[i].name);
+      size_t j = 0;
+      for (; j < len; j++)
+	if (name[j] != (char) eeprom_read_byte((const uint8_t*) np++))
+	  break;
+      if (j == len && (eeprom_read_byte((const uint8_t*) np) == 0))
+	return (i);
+    }
+    if (i == VAR_MAX) return (-1);
+    eeprom_update_block(&m_dp, &m_dict[i].name, sizeof(m_dp));
+    eeprom_update_block(name, m_dp, len);
+    m_dp += len;
+    eeprom_update_byte((uint8_t*) m_dp, 0);
+    m_dp += 1;
+    eeprom_update_block(&m_dp, 0, sizeof(m_dp));
+    m_entries += 1;
+    return (i);
+  }
 };
 
 #endif
