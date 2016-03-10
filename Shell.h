@@ -522,6 +522,17 @@ public:
     case 'm': // -- | write new line to output stream
       m_ios.println();
       break;
+    case 't': // addr -- | write variable name output stream
+      addr = pop();
+      if (addr >= 0 && addr < m_entries) {
+	const uint8_t* np =
+	  (const uint8_t*) eeprom_read_word((const uint16_t*) &m_dict[addr].name);
+	char c;
+	while ((c = eeprom_read_byte(np++)) != 0)
+	  m_ios.print(c);
+	m_ios.print(' ');
+      }
+      break;
     case 'v': // char -- | write character to output stream
       w = pop();
       m_ios.write(w);
@@ -926,6 +937,7 @@ protected:
     case 'q': return (F("?dup"));
     case 'r': return (F("rot"));
     case 's': return (F("swap"));
+    case 't': return (F(".name"));
     case 'u': return (F("dup"));
     case 'v': return (F("emit"));
     case 'w': return (F("while"));
@@ -1087,13 +1099,13 @@ protected:
   {
     int i = 0;
     for (; i < m_entries; i++) {
-      const char* np =
-	(const char*) eeprom_read_word((const uint16_t*) &m_dict[i].name);
+      const uint8_t* np =
+	(const uint8_t*) eeprom_read_word((const uint16_t*) &m_dict[i].name);
       size_t j = 0;
       for (; j < len; j++)
-	if (name[j] != (char) eeprom_read_byte((const uint8_t*) np++))
+	if (name[j] != (char) eeprom_read_byte(np++))
 	  break;
-      if (j == len && (eeprom_read_byte((const uint8_t*) np) == 0))
+      if (j == len && (eeprom_read_byte(np) == 0))
 	return (i);
     }
     if (i == VAR_MAX) return (-1);
