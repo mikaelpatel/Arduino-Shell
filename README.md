@@ -95,10 +95,12 @@ Opcode | Parameters | Description | Forth
 \ | x1..xn n -- x1..xn | n > 0: mark stack frame with n-elements |
 \ | x1..xn y1..ym n -- y1..ym | n < 0: remove stack frame with n-elements |
 $ | n -- addr | address of n-element in frame |
+a | -- bytes | allocated eeprom |
+b | addr -- | write variable to eeprom memory |
 c | xn..x1 n -- | drop n stack elements |
 d | x -- | drop | DROP
 e | flag if-block else-block -- | execute block on flag | IF ELSE THEN
-f | block -- | free block |
+f | addr -- | forget variable |
 g | xn..x1 n -- xn-1..x1 xn | rotate n-elements | ROLL
 h | x y z -- (x*y)/z | scale | */
 i | flag block -- | execute block if flag is true | IF THEN

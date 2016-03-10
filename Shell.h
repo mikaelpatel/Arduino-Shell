@@ -410,6 +410,14 @@ public:
     /*
      * Script/control structure operations.
      */
+    case 'a': // -- bytes | allocated eeprom
+      push((int) m_dp);
+      break;
+    case 'b': // addr -- | write variable to eeprom
+      w = pop();
+      if (w >= 0 && w < m_entries)
+	eeprom_write_word((uint16_t*) &m_dict[w].value, (uint16_t) m_var[w]);
+      break;
     case ':': // addr -- | execute function (variable)
       addr = pop();
       script = (const char*) read(addr);
@@ -429,9 +437,12 @@ public:
       drop();
       if (execute(script) != NULL) return (false);
       break;
-    case 'f': // block -- | free block
-      script = (const char*) pop();
-      if (script != NULL) free((void*) script);
+    case 'f': // addr -- | forget variable
+      w = pop();
+      if (w >= 0 && w < m_entries) {
+	m_entries = w;
+	m_dp = (char*) eeprom_read_word((const uint16_t*) &m_dict[w].name);
+      }
       break;
     case 'i': // flag block -- | execute block if flag is true
       script = (const char*) pop();
@@ -686,15 +697,18 @@ public:
 	return (NULL);
       case ';': // addr block -- | copy block to variable
 	{
-	  const char* dest = m_dp;
+	  const char* dest = m_eeprom.as_addr(m_dp);
 	  const char* src = (const char*) pop();
 	  int addr = pop();
-	  eeprom_update_block(src, m_dp, len);
-	  m_dp += len;
-	  eeprom_update_byte((uint8_t*) m_dp, 0);
-	  m_dp += 1;
-	  eeprom_update_block(&m_dp, 0, sizeof(m_dp));
-	  write(addr, m_eeprom.as_addr(dest));
+	  if (addr >= 0 && addr < m_entries) {
+	    eeprom_update_block(src, m_dp, len);
+	    m_dp += len;
+	    eeprom_update_byte((uint8_t*) m_dp, 0);
+	    m_dp += 1;
+	    eeprom_update_block(&m_dp, 0, sizeof(m_dp));
+	    write(addr, dest);
+	    eeprom_write_word((uint16_t*) &m_dict[addr].value, (uint16_t) dest);
+	  }
 	}
 	continue;
       case '`': // -- addr | lookup or add variable
@@ -835,7 +849,7 @@ protected:
   /** Dictionary entry */
   struct dict_t {
     const char* name;		//!< Name string (in eeprom).
-    int value;			//!< Value.
+    int value;			//!< Value persistent.
   };
 
   char* m_dp;			//!< Dictionary pointer (in eeprom).
@@ -885,10 +899,12 @@ protected:
   {
     if (!FULL_OP_NAMES) return (NULL);
     switch (op) {
+    case 'a': return (F("allocated"));
+    case 'b': return (F("burn"));
     case 'c': return (F("ndrop"));
     case 'd': return (F("drop"));
     case 'e': return (F("ifelse"));
-    case 'f': return (F("free"));
+    case 'f': return (F("forget"));
     case 'g': return (F("roll"));
     case 'h': return (F("*/"));
     case 'i': return (F("if"));
@@ -1079,6 +1095,7 @@ protected:
     m_dp += 1;
     eeprom_update_block(&m_dp, 0, sizeof(m_dp));
     m_entries += 1;
+    m_var[i] = 0;
     return (i);
   }
 };
