@@ -96,7 +96,7 @@ Opcode | Parameters | Description | Forth
 \ | x1..xn y1..ym n -- y1..ym | n < 0: remove stack frame with n-elements |
 $ | n -- addr | address of n-element in frame |
 a | -- bytes | allocated eeprom |
-b | addr -- | write variable to eeprom memory |
+b | base -- | number print base |
 c | xn..x1 n -- | drop n stack elements |
 d | x -- | drop | DROP
 e | flag if-block else-block -- | execute block on flag | IF ELSE THEN
@@ -118,6 +118,7 @@ u | x -- x x | duplicate | DUP
 v | char -- | write character to output stream | EMIT
 w | block( -- flag) -- | execute block while flag is true | BEGIN UNTIL
 x | block -- | execute block | EXECUTE
+z | addr -- | write variable to eeprom memory |
 A | pin -- sample | analogRead(pin) |
 C | xn..x1 -- | clear | ABORT
 D | ms -- | delay |

@@ -53,6 +53,7 @@ public:
     m_marker(-1),
     m_trace(false),
     m_cycle(0),
+    m_base(10),
     m_ios(ios)
   {
   }
@@ -413,7 +414,7 @@ public:
     case 'a': // -- bytes | allocated eeprom
       push((int) m_dp);
       break;
-    case 'b': // addr -- | write variable to eeprom
+    case 'z': // addr -- | write variable to eeprom
       w = pop();
       if (w >= 0 && w < m_entries)
 	eeprom_write_word((uint16_t*) &m_dict[w].value, (uint16_t) m_var[w]);
@@ -505,11 +506,17 @@ public:
       while ((w = m_ios.read()) < 0) yield();
       push(w);
       break;
+    case 'b': // base -- | number print base
+      m_base = pop();
+      break;
     case '?': // addr -- | print variable
       tos(read(tos()));
     case '.': // x -- | print number followed by one space
       w = pop();
-      m_ios.print(w);
+      if (m_base == 2) m_ios.print(F("0b"));
+      else if (m_base == 8) m_ios.print(F("0"));
+      else if (m_base == 16) m_ios.print(F("0x"));
+      m_ios.print(w, m_base > 0 ? m_base : -m_base);
       m_ios.print(' ');
       break;
     case 'm': // -- | write new line to output stream
@@ -861,6 +868,7 @@ protected:
   int m_marker;			//!< Stack marker.
   bool m_trace;			//!< Trace mode.
   unsigned m_cycle;		//!< Cycle counter.
+  int m_base;			//!< Number print base.
   Stream& m_ios;		//!< Input/output Stream.
   int m_var[VAR_MAX];		//!< Variable table.
   int m_stack[STACK_MAX];	//!< Parameter stack.
@@ -900,7 +908,7 @@ protected:
     if (!FULL_OP_NAMES) return (NULL);
     switch (op) {
     case 'a': return (F("allocated"));
-    case 'b': return (F("burn"));
+    case 'b': return (F("base"));
     case 'c': return (F("ndrop"));
     case 'd': return (F("drop"));
     case 'e': return (F("ifelse"));
