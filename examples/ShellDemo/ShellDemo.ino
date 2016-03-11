@@ -44,8 +44,8 @@ void setup()
   shell.set(F("words"), SCRIPT("0{u1+sto8%0={m}i}w8%0#{m}i"));
 
   // Program memory script: iterative factorial function
-  // : fac ( n -- n! ) 1 1 rot { * } loop ;
-  shell.set(F("fac"), SCRIPT("1,1r{*}l"));
+  // : fac ( n -- n! ) 1 2 rot { * } loop ;
+  shell.set(F("fac"), SCRIPT("1,2r{*}l"));
 
   // Program memory script: blink given pin, given number of times
   // : blinks ( n ms pin -- )

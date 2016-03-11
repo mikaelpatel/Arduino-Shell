@@ -26,7 +26,7 @@ class Script;
  * Create a shell script with given string in program memory.
  * @param[in] s script string.
  */
-#define SCRIPT(s) ((Script*) PSTR(s))
+#define SCRIPT(s) ((const Script*) PSTR(s))
 
 /**
  * Script Shell with stack machine instruction set. Instructions are
@@ -252,9 +252,9 @@ public:
    * @param[in] script in program memory.
    * @return index or negative error code.
    */
-  int set(const __FlashStringHelper* var, Script* script)
+  int set(const __FlashStringHelper* var, const Script* script)
   {
-    return (set(var, -(int) script));
+    return (set(var, (int) m_progmem.as_addr((const char*) script)));
   }
 
   /**
@@ -857,7 +857,7 @@ public:
    * @param[in] script program memory based script.
    * @return script reference or NULL.
    */
-  const char* execute(Script* script)
+  const char* execute(const Script* script)
   {
     return (execute(m_progmem.as_addr((const char*) script)));
   }
