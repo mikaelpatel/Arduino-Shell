@@ -95,7 +95,7 @@ Opcode | Parameters | Description | Forth
 \ | x1..xn n -- x1..xn | n > 0: mark stack frame with n-elements |
 \ | x1..xn y1..ym n -- y1..ym | n < 0: remove stack frame with n-elements |
 $ | n -- addr | address of n-element in frame |
-a | -- bytes | allocated eeprom |
+a | -- bytes entries | allocated eeprom |
 b | base -- | number print base | BASE
 c | xn..x1 n -- | drop n stack elements |
 d | x -- | drop | DROP
@@ -114,11 +114,12 @@ p | xn..x1 n -- xn..x1 xn | pick | PICK
 q | x -- [x x] or 0 | duplicate if not zero | ?DUP
 r | x y z --- y z x | rotate | ROT
 s | x y -- y x | swap | SWAP
-t | addr -- | write variable name to output stream | .NAME
+t | addr -- bool | write variable name to output stream | .NAME
 u | x -- x x | duplicate | DUP
 v | char -- | write character to output stream | EMIT
 w | block( -- flag) -- | execute block while flag is true | BEGIN UNTIL
 x | block -- | execute block | EXECUTE
+y | -- | yield for multi-tasking scheduler |
 z | addr -- | write variable to eeprom memory |
 A | pin -- sample | analogRead(pin) |
 C | xn..x1 -- | clear | ABORT
@@ -139,7 +140,6 @@ T | -- true | true | TRUE
 U | pin -- | pinMode(pin, INPUT_PULLUP) |
 W | value pin -- | digitalWrite(pin, value) |
 X | pin -- | digitalToggle(pin)  |
-Y | -- | yield for multi-tasking scheduler |
 Z | -- | toggle trace mode |
 
 ## Special forms

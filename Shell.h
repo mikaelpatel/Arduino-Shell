@@ -44,8 +44,8 @@ public:
    * @param[in] ios input output stream.
    */
   Shell(Stream& ios) :
-    m_dp((char*) (sizeof(dict_t) * VAR_MAX)),
-    m_dict((dict_t*) sizeof(char*)),
+    m_dp((char*) (sizeof(dict_t) * VAR_MAX) + sizeof(m_entries)),
+    m_dict((dict_t*) (sizeof(m_dp) + sizeof(m_entries))),
     m_entries(0),
     m_fp(m_stack + STACK_MAX),
     m_sp(m_stack + STACK_MAX),
@@ -56,6 +56,15 @@ public:
     m_base(10),
     m_ios(ios)
   {
+    // Restore state from eeprom
+    uint8_t entries = eeprom_read_byte((const uint8_t*) sizeof(char*));
+    char* dp = (char*) eeprom_read_word(0);
+    if (dp != (char*) 0xffff && entries < VAR_MAX) {
+      m_entries = entries;
+      m_dp = dp;
+      for (uint8_t i = 0; i < entries; i++)
+	m_var[i] = eeprom_read_word((uint16_t*) &m_dict[i].value);
+    }
   }
 
   /**
@@ -411,8 +420,9 @@ public:
     /*
      * Script/control structure operations.
      */
-    case 'a': // -- bytes | allocated eeprom
+    case 'a': // -- bytes entries | allocated eeprom
       push((int) m_dp);
+      push(m_entries);
       break;
     case 'z': // addr -- | write variable to eeprom
       w = pop();
@@ -443,6 +453,8 @@ public:
       if (w >= 0 && w < m_entries) {
 	m_entries = w;
 	m_dp = (char*) eeprom_read_word((const uint16_t*) &m_dict[w].name);
+	eeprom_update_block(&m_dp, 0, sizeof(m_dp));
+	eeprom_update_byte((uint8_t*) sizeof(m_dp), m_entries);
       }
       break;
     case 'i': // flag block -- | execute block if flag is true
@@ -523,7 +535,7 @@ public:
       m_ios.println();
       break;
     case 't': // addr -- | write variable name output stream
-      addr = pop();
+      addr = tos();
       if (addr >= 0 && addr < m_entries) {
 	const uint8_t* np =
 	  (const uint8_t*) eeprom_read_word((const uint16_t*) &m_dict[addr].name);
@@ -531,7 +543,9 @@ public:
 	while ((c = eeprom_read_byte(np++)) != 0)
 	  m_ios.print(c);
 	m_ios.print(' ');
+	tos(-1);
       }
+      else tos(0);
       break;
     case 'v': // char -- | write character to output stream
       w = pop();
@@ -692,7 +706,9 @@ public:
       if (m_trace) {
 	m_ios.print(++m_cycle);
 	m_ios.print(':');
-	m_ios.print((unsigned) mem->as_addr(ip - 1));
+	m_ios.print(mem->prefix());
+	m_ios.print(':');
+	m_ios.print((int) ip - 1);
 	m_ios.print(':');
 	const class __FlashStringHelper* str = as_fstr(op);
 	if (str == NULL)
@@ -976,6 +992,15 @@ protected:
   class Memory {
   public:
     /**
+     * Return prefix for address space.
+     * @return string.
+     */
+    virtual const __FlashStringHelper* prefix()
+    {
+      return (F("SRAM"));
+    }
+
+    /**
      * Return local script address mapped to linear address space.
      * @param src local address.
      * @return linear address.
@@ -1010,6 +1035,15 @@ protected:
   class ProgramMemory : public Memory {
   public:
     /**
+     * Return prefix for address space.
+     * @return string.
+     */
+    virtual const __FlashStringHelper* prefix()
+    {
+      return (F("PROGMEM"));
+    }
+
+    /**
      * Return local script address mapped to linear address space.
      * @param src local address.
      * @return linear address.
@@ -1042,6 +1076,15 @@ protected:
 
   class EEPROM : public Memory {
   public:
+    /**
+     * Return prefix for address space.
+     * @return string.
+     */
+    virtual const __FlashStringHelper* prefix()
+    {
+      return (F("EEPROM"));
+    }
+
     /**
      * Return local script address mapped to linear address space.
      * @param src local address.
@@ -1116,6 +1159,7 @@ protected:
     m_dp += 1;
     eeprom_update_block(&m_dp, 0, sizeof(m_dp));
     m_entries += 1;
+    eeprom_update_byte((uint8_t*) sizeof(m_dp), m_entries);
     m_var[i] = 0;
     return (i);
   }
