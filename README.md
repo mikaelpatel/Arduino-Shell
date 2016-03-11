@@ -114,7 +114,7 @@ p | xn..x1 n -- xn..x1 xn | pick | PICK
 q | x -- [x x] or 0 | duplicate if not zero | ?DUP
 r | x y z --- y z x | rotate | ROT
 s | x y -- y x | swap | SWAP
-t | addr -- | trace variable/function name | .NAME
+t | addr -- | write variable name to output stream | .NAME
 u | x -- x x | duplicate | DUP
 v | char -- | write character to output stream | EMIT
 w | block( -- flag) -- | execute block while flag is true | BEGIN UNTIL
@@ -439,7 +439,7 @@ Script:
  110,5,100`within:.
 ```
 
-### Iterative Factorial
+### Iterative Factorial (while)
 
 Calculate factorial number of given parameter.
 ```
@@ -457,6 +457,21 @@ Calculate factorial number of given parameter.
 Script:
 ```
  `fac{1s{u0>{so*s1-T}{dF}e}w};
+ 5`fac:.
+```
+
+### Iterative Factorial (loop)
+
+Calculate factorial number of given parameter.
+```
+ : fac ( n -- n! | n > 0 )
+   1 1 rot { * } loop ;
+
+ 5 fac .
+```
+Script:
+```
+ `fac{1,1r{*}l};
  5`fac:.
 ```
 
@@ -483,10 +498,10 @@ Script:
 Sum a vector of integers on stack. Use that stack marker to get number
 of elements in vector.
 ```
- [ 1 2 3 ] 0 swap { + } loop
+ [ 1 2 3 4 5 6 7 8 ] 0 1 rot { drop + } loop
 ```
 Script:
 ```
- [1,2,3]0s{+}l
+ [1,2,3,4,5,6,7,8]0,1r{d+}l
 ```
 
