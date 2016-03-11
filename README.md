@@ -465,13 +465,13 @@ Script:
 Calculate factorial number of given parameter.
 ```
  : fac ( n -- n! | n > 0 )
-   1 1 rot { * } loop ;
+   1 2 rot { * } loop ;
 
  5 fac .
 ```
 Script:
 ```
- `fac{1,1r{*}l};
+ `fac{1,2r{*}l};
  5`fac:.
 ```
 

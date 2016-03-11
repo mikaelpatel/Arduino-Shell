@@ -997,7 +997,7 @@ protected:
      */
     virtual const __FlashStringHelper* prefix()
     {
-      return (F("SRAM"));
+      return (F("RAM"));
     }
 
     /**
@@ -1040,7 +1040,7 @@ protected:
      */
     virtual const __FlashStringHelper* prefix()
     {
-      return (F("PROGMEM"));
+      return (F("PGM"));
     }
 
     /**
@@ -1082,7 +1082,7 @@ protected:
      */
     virtual const __FlashStringHelper* prefix()
     {
-      return (F("EEPROM"));
+      return (F("EEM"));
     }
 
     /**
