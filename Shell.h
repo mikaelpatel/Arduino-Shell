@@ -44,8 +44,8 @@ public:
    * @param[in] ios input output stream.
    */
   Shell(Stream& ios) :
-    m_dp((char*) (sizeof(dict_t) * VAR_MAX) + sizeof(m_entries)),
-    m_dict((dict_t*) (sizeof(m_dp) + sizeof(m_entries))),
+    m_dp((char*) sizeof(m_dp) + sizeof(m_entries) + (sizeof(dict_t) * VAR_MAX)),
+    m_dict((dict_t*) sizeof(m_dp) + sizeof(m_entries)),
     m_entries(0),
     m_fp(m_stack + STACK_MAX),
     m_sp(m_stack + STACK_MAX),
@@ -59,6 +59,8 @@ public:
     // Restore state from eeprom
     uint8_t entries = eeprom_read_byte((const uint8_t*) sizeof(char*));
     char* dp = (char*) eeprom_read_word(0);
+
+    // Check valid state before restore
     if (dp != (char*) 0xffff && entries < VAR_MAX) {
       m_entries = entries;
       m_dp = dp;
@@ -220,7 +222,7 @@ public:
   }
 
   /**
-   * Define a variable.
+   * Define a dictionary entry with given name and value.
    * @param[in] var name string (in program memory).
    * @param[in] value.
    * @return index or negative error code.
@@ -236,9 +238,9 @@ public:
   }
 
   /**
-   * Define a script variable/function.
+   * Define a function with given name and script in data memory.
    * @param[in] var name string.
-   * @param[in] script string.
+   * @param[in] script string in data memory.
    * @return index or negative error code.
    */
   int set(const __FlashStringHelper* var, const char* script)
@@ -247,7 +249,7 @@ public:
   }
 
   /**
-   * Define a script variable/function with script in program memory.
+   * Define a function with given name and script in program memory.
    * @param[in] var name string.
    * @param[in] script in program memory.
    * @return index or negative error code.
@@ -880,9 +882,9 @@ protected:
   /** Trap operation code prefix. */
   static const char TRAP_OP_CODE = '_';
 
-  /** Dictionary entry */
+  /** Dictionary entry (in eeprom). */
   struct dict_t {
-    const char* name;		//!< Name string (in eeprom).
+    const char* name;		//!< Name string (null terminated).
     int value;			//!< Value persistent.
   };
 
@@ -969,7 +971,7 @@ protected:
     case 'K': return (F("?key"));
     case 'L': return (F("low"));
     case 'M': return (F("millis"));
-    case 'N': return (F(""));
+    case 'N': return (F(" "));
     case 'O': return (F("output"));
     case 'P': return (F("analogWrite"));
     case 'R': return (F("digitalRead"));
@@ -1118,7 +1120,7 @@ protected:
 
   /**
    * Return memory access handler for given script pointer (access factory).
-   * @param[in] s script pointer.
+   * @param[in] ip script pointer.
    * @return memory access.
    */
   Memory* access(const char* ip)
@@ -1141,6 +1143,8 @@ protected:
   int lookup(const char* name, size_t len)
   {
     int i = 0;
+
+    // Lookup entry in dictionary
     for (; i < m_entries; i++) {
       const uint8_t* np =
 	(const uint8_t*) eeprom_read_word((const uint16_t*) &m_dict[i].name);
@@ -1151,7 +1155,11 @@ protected:
       if (j == len && (eeprom_read_byte(np) == 0))
 	return (i);
     }
+
+    // Check if dictionary is full
     if (i == VAR_MAX) return (-1);
+
+    // Add entry to dictionary
     eeprom_update_block(&m_dp, &m_dict[i].name, sizeof(m_dp));
     eeprom_update_block(name, m_dp, len);
     m_dp += len;
@@ -1161,6 +1169,8 @@ protected:
     m_entries += 1;
     eeprom_update_byte((uint8_t*) sizeof(m_dp), m_entries);
     m_var[i] = 0;
+
+    // Return entry index
     return (i);
   }
 };
