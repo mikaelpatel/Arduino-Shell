@@ -38,9 +38,9 @@ void setup()
   // : words ( -- )
   //   0
   //   { dup 1+ swap .name
-  //     over 8 % 0= { cr } if
+  //     over 8 mod 0= { cr } if
   //   } while
-  //   8 % 0# { cr } if ;
+  //   8 mod 0<> { cr } if ;
   shell.set(F("words"), SCRIPT("0{u1+sto8%0={m}i}w8%0#{m}i"));
 
   // Program memory script: iterative factorial function

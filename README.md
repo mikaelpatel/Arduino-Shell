@@ -156,7 +156,10 @@ Boolean values are true(-1) and false(0). Mapping to boolean may be
 done with testing non-zero (0#). Defining true(-1) allows Boolean
 values and relation operations to be directly combined with bitwise
 operations.
-
+```
+ 10 0 # . m
+ T F ~ = . m
+```
 The instructions to push the boolean values are _T_ and _F_.
 
 ### Literal Numbers
