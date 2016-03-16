@@ -652,7 +652,7 @@ public:
   {
     Memory* mem = access(script);
     read_fn read = mem->get_read_fn();
-    const char* ip = mem->as_index(script);
+    const char* ip = mem->as_local(script);
     bool neg = false;
     int base = 10;
     int* fp = m_fp;
@@ -1020,7 +1020,7 @@ protected:
      * @param src linear address.
      * @return local address.
      */
-    virtual const char* as_index(const char* src)
+    virtual const char* as_local(const char* src)
     {
       return (src);
     }
@@ -1071,7 +1071,7 @@ protected:
      * @param src linear address.
      * @return local address.
      */
-    virtual const char* as_index(const char* src)
+    virtual const char* as_local(const char* src)
     {
       return ((const char*) -((int) src));
     }
@@ -1122,7 +1122,7 @@ protected:
      * @param src linear address.
      * @return local address.
      */
-    virtual const char* as_index(const char* src)
+    virtual const char* as_local(const char* src)
     {
       return (src - 0x4000);
     }
