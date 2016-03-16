@@ -651,6 +651,7 @@ public:
   const char* execute(const char* script)
   {
     Memory* mem = access(script);
+    read_fn read = mem->get_read_fn();
     const char* ip = mem->as_index(script);
     bool neg = false;
     int base = 10;
@@ -659,11 +660,11 @@ public:
     char op;
 
     // Execute operation code in script
-    while ((op = mem->read(ip++)) != 0) {
+    while ((op = read(ip++)) != 0) {
 
       // Check for negative numbers
       if (op == '-') {
-	op = mem->read(ip);
+	op = read(ip);
 	if (op < '0' || op > '9') {
 	  op = '-';
 	}
@@ -675,11 +676,11 @@ public:
 
       // Check for base prefix
       else if (op == '0') {
-	op = mem->read(ip++);
+	op = read(ip++);
 	if (op == 'x') base = 16;
 	else if (op == 'b') base = 2;
 	else ip -= 2;
-	op = mem->read(ip++);
+	op = read(ip++);
       }
 
       // Check for literal numbers
@@ -690,7 +691,7 @@ public:
 	    w = (w * base) + (op - 'a') + 10;
 	  else
 	    w = (w * base) + (op - '0');
-	  op = mem->read(ip++);
+	  op = read(ip++);
 	} while (is_digit(op, base));
 	if (neg) {
 	  w = -w;
@@ -751,7 +752,7 @@ public:
 	{
 	  char name[NAME_MAX];
 	  size_t len = 0;
-	  while (((op = mem->read(ip++)) != 0) && isalnum(op))
+	  while (((op = read(ip++)) != 0) && isalnum(op))
 	    name[len++] = op;
 	  name[len] = 0;
 	  if (len > 0) {
@@ -767,7 +768,7 @@ public:
 	ip = ip - 1;
 	continue;
       case '\'': // -- char | push character
-	op = mem->read(ip);
+	op = read(ip);
 	if (op != 0) {
 	  push(op);
 	  ip += 1;
@@ -801,7 +802,7 @@ public:
       // Parse special parenphesis forms (allow nesting)
       if (left) {
 	int n = 1;
-	while ((n != 0) && ((op = mem->read(ip++)) != 0)) {
+	while ((n != 0) && ((op = read(ip++)) != 0)) {
 	  if (op == left) n++;
 	  else if (op == right) n--;
 	  if (left == '(' && n > 0) m_ios.print(op);
@@ -876,6 +877,8 @@ public:
   }
 
 protected:
+  typedef char (*read_fn)(const char*);
+
   /** Max length of name. */
   static const size_t NAME_MAX = 16;
 
@@ -1023,15 +1026,23 @@ protected:
     }
 
     /**
+     * Return read function for memory.
+     * @return read function.
+     */
+    virtual read_fn get_read_fn()
+    {
+      return (read);
+    }
+
+    /**
      * Read byte from given local address.
      * @param src local address.
      * @return byte.
      */
-    virtual char read(const char* src)
+    static char read(const char* src)
     {
       return (*src);
     };
-
   } m_memory;
 
   class ProgramMemory : public Memory {
@@ -1066,11 +1077,20 @@ protected:
     }
 
     /**
+     * Return read function for program memory.
+     * @return read function.
+     */
+    virtual read_fn get_read_fn()
+    {
+      return (read);
+    }
+
+    /**
      * Read byte from given local address.
      * @param src local address.
      * @return byte.
      */
-    virtual char read(const char* src)
+    static char read(const char* src)
     {
       return (pgm_read_byte(src));
     };
@@ -1108,11 +1128,20 @@ protected:
     }
 
     /**
+     * Return read function for eeprom.
+     * @return read function.
+     */
+    virtual read_fn get_read_fn()
+    {
+      return (read);
+    }
+
+    /**
      * Read byte from given local address.
      * @param src local address.
      * @return byte.
      */
-    virtual char read(const char* src)
+    static char read(const char* src)
     {
       return (eeprom_read_byte((const uint8_t*) src));
     };
