@@ -24,6 +24,12 @@
 // Shell 16 depth stack and 16 variables
 Shell<16,16> shell(Serial);
 
+// Define to benchmark scripts in data memory
+#ifdef USE_SRAM_SCRIPTS
+#undef SCRIPT
+#define SCRIPT(x) x
+#endif
+
 #define BENCHMARK(script)				\
   do {							\
     uint32_t start0 = micros();				\
