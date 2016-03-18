@@ -278,370 +278,6 @@ public:
   }
 
   /**
-   * Execute given operation code (character). Return true if
-   * successful otherwise false.
-   * @param[in] op operation code.
-   * @return bool.
-   */
-  bool execute(char op)
-  {
-    const char* script;
-    int pin, addr, w, n;
-    switch (op) {
-    /*
-     *   Arithmetic operators.
-     */
-    case 'n': // x -- -x | negate
-      tos(-tos());
-      break;
-    case '+': // x y -- x+y | addition
-      w = pop();
-      tos(tos() + w);
-      break;
-    case '-': // x y -- x-y | subtraction
-      w = pop();
-      tos(tos() - w);
-      break;
-    case '*': // x y -- x*y | multiplication
-      w = pop();
-      tos(tos() * w);
-      break;
-    case '/': // x y -- x/y | division
-      w = pop();
-      tos(tos() / w);
-      break;
-    case '%': // x y -- x%y | modulo
-      w = pop();
-      tos(tos() % w);
-      break;
-    case 'h': // x y z -- x*y/z | scale
-      w = pop();
-      n = pop();
-      tos(tos() * ((long) n) / w);
-      break;
-    /*
-     *  Comparison/relational operators.
-     */
-    case 'F': // -- false | false
-      push(0);
-      break;
-    case 'T': // -- true | true
-      push(-1);
-      break;
-    case '=': // x y -- x==y | equal
-      w = pop();
-      tos(as_bool(tos() == w));
-      break;
-    case '#': // x y -- x!=y | not equal
-      w = pop();
-      tos(as_bool(tos() != w));
-      break;
-    case '<': // x y -- x<y | less than
-      w = pop();
-      tos(as_bool(tos() < w));
-      break;
-    case '>': // x y -- x>y | greater than
-      w = pop();
-      tos(as_bool(tos() > w));
-      break;
-    /*
-     *  Bitwise/logical operators.
-     */
-    case '~': // x -- ~x | bitwise not
-      tos(~tos());
-      break;
-    case '&': // x y -- x&y | bitwise and
-      w = pop();
-      tos(tos() & w);
-      break;
-    case '|': // x y -- x|y | bitwise or
-      w = pop();
-      tos(tos() | w);
-      break;
-    case '^': // x y -- x^y | bitwise xor
-      w = pop();
-      tos(tos() ^ w);
-      break;
-    /*
-     * Stack operations.
-     */
-    case 'c': // xn..x1 n -- | drop n stack elements
-      n = tos();
-      if (n > 0 && n < depth()) {
-	m_sp += n;
-      }
-    case 'd': // x -- | drop
-      drop();
-      break;
-    case 'g': // xn..x1 n -- xn-1..x1 xn | rotate n-elements
-      n = tos();
-      if (n > 0 && n < depth()) {
-	tos(m_sp[--n]);
-	for (; n > 0; n--)
-	  m_sp[n] = m_sp[n - 1];
-	m_sp += 1;
-      }
-      else drop();
-      break;
-    case 'j': // xn..x1 -- xn..x1 n | stack depth
-      push(depth());
-      break;
-    case 'o': // x y -- x y x | over
-      push(*m_sp);
-      break;
-    case 'p': // xn..x1 n -- xn..x1 xn | pick
-      tos(*(m_sp + tos() - 1));
-      break;
-    case 'r': // x y z --- y z x | rotate
-      w = tos();
-      tos(*(m_sp + 1));
-      *(m_sp + 1) = *m_sp;
-      *m_sp = w;
-      break;
-    case 's': // x y -- y x | swap
-      w = tos();
-      tos(*m_sp);
-      *m_sp = w;
-      break;
-    case 'q': // x -- [x x] or 0 | duplicate if not zero
-      if (tos() == 0) break;
-    case 'u': // x -- x x | duplicate
-      push(tos());
-      break;
-    /*
-     * Memory access operations.
-     */
-    case '@': // addr -- value | read variable
-      tos(read(tos()));
-      break;
-    case '!': // value addr -- | write variable
-      addr = pop();
-      w = pop();
-      write(addr, w);
-      break;
-    /*
-     * Script/control structure operations.
-     */
-    case 'a': // -- bytes entries | allocated eeprom
-      push((int) m_dp);
-      push(m_entries);
-      break;
-    case 'z': // addr -- | write variable to eeprom
-      w = pop();
-      if (w >= 0 && w < m_entries)
-	eeprom_write_word((uint16_t*) &m_dict[w].value, (uint16_t) m_var[w]);
-      break;
-    case ':': // addr -- | execute function (variable)
-      addr = pop();
-      script = (const char*) read(addr);
-      if (script == NULL) return (false);
-      if (execute(script) != NULL) return (false);
-      break;
-    case 'e': // flag if-block else-block -- | execute block on flag
-      w = *(m_sp + 1);
-      if (w != 0) {
-	drop();
-	script = (const char*) pop();
-      }
-      else {
-	script = (const char*) pop();
-	drop();
-      }
-      drop();
-      if (execute(script) != NULL) return (false);
-      break;
-    case 'f': // addr -- | forget variable
-      w = pop();
-      if (w >= 0 && w < m_entries) {
-	m_entries = w;
-	m_dp = (char*) eeprom_read_word((const uint16_t*) &m_dict[w].name);
-	eeprom_update_block(&m_dp, 0, sizeof(m_dp));
-	eeprom_update_byte((uint8_t*) sizeof(m_dp), m_entries);
-      }
-      break;
-    case 'i': // flag block -- | execute block if flag is true
-      script = (const char*) pop();
-      if (pop() && execute(script) != NULL) return (false);
-      break;
-    case 'l': // low high block( i -- ) -- | execute block from low to high
-      {
-	script = (const char*) pop();
-	int high = pop();
-	int low = pop();
-	for (int i = low; i <= high; i++) {
-	  push(i);
-	  if (execute(script) != NULL) return (false);
-	}
-      }
-      break;
-    case 'w': // block( -- flag) -- | execute block while
-      script = (const char*) pop();
-      do {
-	if (execute(script) != NULL) return (false);
-      } while (pop());
-      break;
-    case 'x': // script -- | execute script
-      script = (const char*) pop();
-      if (execute(script) != NULL) return (false);
-      break;
-    case 'y': // -- | yield
-      yield();
-      break;
-    /*
-     * Stack frame operations.
-     */
-    case '\\':
-      n = pop();
-      // x1..xn n -- x1..xn | mark n-element stack frame
-      if (n > 0) {
-	m_fp = m_sp + n - 1;
-      }
-      // x1..xn y1..ym n -- y1..ym | resolve n-element stack frame
-      else {
-	n = m_fp - m_sp + n;
-	if (n >= 0) {
-	  while (n--) *--m_fp = m_sp[n];
-	  m_sp = m_fp;
-	}
-	else {
-	  m_sp = m_fp;
-	  drop();
-	}
-      }
-      break;
-    case '$': // n -- addr | address of n-element in frame
-      n = tos();
-      tos((m_fp - n) - m_var);
-      break;
-    /*
-     * Input/output operations.
-     */
-    case 'k': // -- char | blocking read from input stream
-      while ((w = m_ios.read()) < 0) yield();
-      push(w);
-      break;
-    case 'b': // base -- | number print base
-      m_base = pop();
-      break;
-    case '?': // addr -- | print variable
-      tos(read(tos()));
-    case '.': // x -- | print number followed by one space
-      w = pop();
-      if (m_base == 2) m_ios.print(F("0b"));
-      else if (m_base == 8) m_ios.print(F("0"));
-      else if (m_base == 16) m_ios.print(F("0x"));
-      m_ios.print(w, m_base > 0 ? m_base : -m_base);
-      m_ios.print(' ');
-      break;
-    case 'm': // -- | write new line to output stream
-      m_ios.println();
-      break;
-    case 't': // addr -- | write variable name output stream
-      addr = tos();
-      if (addr >= 0 && addr < m_entries) {
-	const uint8_t* np =
-	  (const uint8_t*) eeprom_read_word((const uint16_t*) &m_dict[addr].name);
-	char c;
-	while ((c = eeprom_read_byte(np++)) != 0)
-	  m_ios.print(c);
-	m_ios.print(' ');
-	tos(-1);
-      }
-      else tos(0);
-      break;
-    case 'v': // char -- | write character to output stream
-      w = pop();
-      m_ios.write(w);
-      break;
-    /*
-     * Arduino operations.
-     */
-    case 'A': // pin -- sample | analogRead(pin)
-      pin = tos();
-      tos(analogRead(pin));
-      break;
-    case 'C': // xn..x1 -- | clear
-      clear();
-      break;
-    case 'D': // ms -- | delay()
-      w = pop();
-      delay((unsigned) w);
-      break;
-    case 'E': // period addr -- bool | time-out
-      addr = pop();
-      w = read(addr);
-      n = tos();
-      if ((((unsigned) millis() & 0xffff) - ((unsigned) w)) >= ((unsigned) n)) {
-	tos(-1);
-	write(addr, millis());
-      }
-      else tos(0);
-      break;
-    case 'H': // pin -- | digitalWrite(pin, HIGH)
-      pin = pop();
-      digitalWrite(pin, HIGH);
-      break;
-    case 'I': // pin -- | pinMode(pin, INPUT)
-      pin = pop();
-      pinMode(pin, INPUT);
-      break;
-    case 'K': // -- [char true] or false | non-blocking read from input stream
-      w = m_ios.read();
-      if (w < 0) {
-	push(0);
-      } else {
-	push(w);
-	push(-1);
-      }
-      break;
-    case 'L': // pin -- | digitalWrite(pin, LOW)
-      pin = pop();
-      digitalWrite(pin, LOW);
-      break;
-    case 'M': // -- ms | millis()
-      push(millis());
-      break;
-    case 'N': // -- | no operation
-      break;
-    case 'O': // pin -- | pinMode(pin, OUTPUT)
-      pin = pop();
-      pinMode(pin, OUTPUT);
-      break;
-    case 'P': // value pin -- | analogWrite(pin, value)
-      pin = pop();
-      w = pop();
-      analogWrite(pin, w);
-      break;
-    case 'R': // pin -- bool | digitalRead(pin)
-      pin = tos();
-      tos(as_bool(digitalRead(pin)));
-      break;
-    case 'S': // -- | print stack contents
-      print();
-      break;
-    case 'U': // pin -- | pinMode(pin, INPUT_PULLUP)
-      pin = pop();
-      pinMode(pin, INPUT_PULLUP);
-      break;
-    case 'W': // value pin -- | digitalWrite(pin, value)
-      pin = pop();
-      w = pop();
-      digitalWrite(pin, w);
-      break;
-    case 'X': // pin -- | digitalToggle(pin)
-      pin = pop();
-      digitalWrite(pin, !digitalRead(pin));
-      break;
-    case 'Z': // -- | toggle trace mode
-      m_trace = !m_trace;
-      break;
-    default: // illegal operation code
-      return (false);
-    }
-    return (true);
-  }
-
-  /**
    * Execute given script (null terminated sequence of operation
    * codes). Return NULL if successful otherwise script reference that
    * failed. Prints error position in trace mode.
@@ -651,20 +287,22 @@ public:
   const char* execute(const char* script)
   {
     Memory* mem = access(script);
-    read_fn read = mem->get_read_fn();
+    next_fn next = mem->get_next_fn();
     const char* ip = mem->as_local(script);
     bool neg = false;
     int base = 10;
     int* fp = m_fp;
     size_t len = 0;
+    int w, n, addr, pin;
+    const char* sp;
     char op;
 
     // Execute operation code in script
-    while ((op = read(ip++)) != 0) {
+    while ((op = next(ip++)) != 0) {
 
       // Check for negative numbers
       if (op == '-') {
-	op = read(ip);
+	op = next(ip);
 	if (op < '0' || op > '9') {
 	  op = '-';
 	}
@@ -676,11 +314,11 @@ public:
 
       // Check for base prefix
       else if (op == '0') {
-	op = read(ip++);
+	op = next(ip++);
 	if (op == 'x') base = 16;
 	else if (op == 'b') base = 2;
 	else ip -= 2;
-	op = read(ip++);
+	op = next(ip++);
       }
 
       // Check for literal numbers
@@ -691,7 +329,7 @@ public:
 	    w = (w * base) + (op - 'a') + 10;
 	  else
 	    w = (w * base) + (op - '0');
-	  op = read(ip++);
+	  op = next(ip++);
 	} while (is_digit(op, base));
 	if (neg) {
 	  w = -w;
@@ -724,14 +362,302 @@ public:
 	}
       }
 
-      // Check for special forms
+      // Execute operation or parse special form
       char left = 0, right;
       switch (op) {
+      /*
+       * No operations.
+       */
       case ' ': // -- | no operation
       case ',':
 	continue;
-      case '}': // -- | end of block
-	return (NULL);
+      /*
+       *   Arithmetic operators.
+       */
+      case 'n': // x -- -x | negate
+	tos(-tos());
+	continue;
+      case '+': // x y -- x+y | addition
+	w = pop();
+	tos(tos() + w);
+	continue;
+      case '-': // x y -- x-y | subtraction
+	w = pop();
+	tos(tos() - w);
+	continue;
+      case '*': // x y -- x*y | multiplication
+	w = pop();
+	tos(tos() * w);
+	continue;
+      case '/': // x y -- x/y | division
+	w = pop();
+	tos(tos() / w);
+	break;
+      case '%': // x y -- x%y | modulo
+	w = pop();
+	tos(tos() % w);
+	break;
+      case 'h': // x y z -- x*y/z | scale
+	w = pop();
+	n = pop();
+	tos(tos() * ((long) n) / w);
+	break;
+      /*
+       *  Comparison/relational operators.
+       */
+      case 'F': // -- false | false
+	push(0);
+	continue;
+      case 'T': // -- true | true
+	push(-1);
+	continue;
+      case '=': // x y -- x==y | equal
+	w = pop();
+	tos(as_bool(tos() == w));
+	continue;
+      case '#': // x y -- x!=y | not equal
+	w = pop();
+	tos(as_bool(tos() != w));
+	continue;
+      case '<': // x y -- x<y | less than
+	w = pop();
+	tos(as_bool(tos() < w));
+	continue;
+      case '>': // x y -- x>y | greater than
+	w = pop();
+	tos(as_bool(tos() > w));
+	continue;
+      /*
+       *  Bitwise/logical operators.
+       */
+      case '~': // x -- ~x | bitwise not
+	tos(~tos());
+	continue;
+      case '&': // x y -- x&y | bitwise and
+	w = pop();
+	tos(tos() & w);
+	continue;
+      case '|': // x y -- x|y | bitwise or
+	w = pop();
+	tos(tos() | w);
+	continue;
+      case '^': // x y -- x^y | bitwise xor
+	w = pop();
+	tos(tos() ^ w);
+	continue;
+      /*
+       * Stack operations.
+       */
+      case 'c': // xn..x1 n -- | drop n stack elements
+	n = tos();
+	if (n > 0 && n < depth()) {
+	  m_sp += n;
+	}
+      case 'd': // x -- | drop
+	drop();
+	continue;
+      case 'g': // xn..x1 n -- xn-1..x1 xn | rotate n-elements
+	n = tos();
+	if (n > 0 && n < depth()) {
+	  tos(m_sp[--n]);
+	  for (; n > 0; n--)
+	    m_sp[n] = m_sp[n - 1];
+	  m_sp += 1;
+	}
+	else drop();
+	continue;
+      case 'j': // xn..x1 -- xn..x1 n | stack depth
+	push(depth());
+	continue;
+      case 'o': // x y -- x y x | over
+	push(*m_sp);
+	continue;
+      case 'p': // xn..x1 n -- xn..x1 xn | pick
+	tos(*(m_sp + tos() - 1));
+	continue;
+      case 'r': // x y z --- y z x | rotate
+	w = tos();
+	tos(*(m_sp + 1));
+	*(m_sp + 1) = *m_sp;
+	*m_sp = w;
+	continue;
+      case 's': // x y -- y x | swap
+	w = tos();
+	tos(*m_sp);
+	*m_sp = w;
+	continue;
+      case 'q': // x -- [x x] or 0 | duplicate if not zero
+	if (tos() == 0) continue;
+      case 'u': // x -- x x | duplicate
+	push(tos());
+	continue;
+      /*
+       * Memory access operations.
+       */
+      case '@': // addr -- value | read variable
+	tos(read(tos()));
+	continue;
+      case '!': // value addr -- | write variable
+	addr = pop();
+	w = pop();
+	write(addr, w);
+	continue;
+      case 'z': // addr -- | write variable to eeprom
+	w = pop();
+	if (w >= 0 && w < m_entries)
+	  eeprom_write_word((uint16_t*) &m_dict[w].value, (uint16_t) m_var[w]);
+	continue;
+      case 'a': // -- bytes entries | allocated eeprom
+	push((int) m_dp);
+	push(m_entries);
+	continue;
+      /*
+       * Stack frame operations.
+       */
+      case '\\':
+	n = pop();
+	// x1..xn n -- x1..xn | mark n-element stack frame
+	if (n > 0) {
+	  m_fp = m_sp + n - 1;
+	}
+	// x1..xn y1..ym n -- y1..ym | resolve n-element stack frame
+	else {
+	  n = m_fp - m_sp + n;
+	  if (n >= 0) {
+	    while (n--) *--m_fp = m_sp[n];
+	    m_sp = m_fp;
+	  }
+	  else {
+	    m_sp = m_fp;
+	    drop();
+	  }
+	}
+	continue;
+      case '$': // n -- addr | address of n-element in frame
+	n = tos();
+	tos((m_fp - n) - m_var);
+	continue;
+      /*
+       * Input/output operations.
+       */
+      case 'k': // -- char | blocking read from input stream
+	while ((w = m_ios.read()) < 0) yield();
+	push(w);
+	continue;
+      case 'b': // base -- | number print base
+	m_base = pop();
+	continue;
+      case '?': // addr -- | print variable
+	tos(read(tos()));
+      case '.': // x -- | print number followed by one space
+	w = pop();
+	if (m_base == 2) m_ios.print(F("0b"));
+	else if (m_base == 8) m_ios.print(F("0"));
+	else if (m_base == 16) m_ios.print(F("0x"));
+	m_ios.print(w, m_base > 0 ? m_base : -m_base);
+	m_ios.print(' ');
+	continue;
+      case 'm': // -- | write new line to output stream
+	m_ios.println();
+	continue;
+      case 't': // addr -- | write variable name output stream
+	addr = tos();
+	if (addr >= 0 && addr < m_entries) {
+	  const uint8_t* np =
+	    (const uint8_t*) eeprom_read_word((const uint16_t*) &m_dict[addr].name);
+	  char c;
+	  while ((c = eeprom_read_byte(np++)) != 0)
+	    m_ios.print(c);
+	  m_ios.print(' ');
+	  tos(-1);
+	}
+	else tos(0);
+	continue;
+      case 'v': // char -- | write character to output stream
+	w = pop();
+	m_ios.write(w);
+	continue;
+      /*
+       * Control structure operations.
+       */
+      case 'e': // flag if-block else-block -- | execute block on flag
+	w = *(m_sp + 1);
+	if (w != 0) {
+	  drop();
+	  sp = (const char*) pop();
+	}
+	else {
+	  sp = (const char*) pop();
+	  drop();
+	}
+	drop();
+	if (execute(sp) != NULL) goto error;
+	continue;
+      case 'f': // addr -- | forget variable
+	w = pop();
+	if (w >= 0 && w < m_entries) {
+	  m_entries = w;
+	  m_dp = (char*) eeprom_read_word((const uint16_t*) &m_dict[w].name);
+	  eeprom_update_block(&m_dp, 0, sizeof(m_dp));
+	  eeprom_update_byte((uint8_t*) sizeof(m_dp), m_entries);
+	}
+	continue;
+      case 'i': // flag block -- | execute block if flag is true
+	sp = (const char*) pop();
+	if (pop() && execute(sp) != NULL) goto error;
+	continue;
+      case 'l': // low high block( i -- ) -- | execute block from low to high
+	{
+	  sp = (const char*) pop();
+	  int high = pop();
+	  int low = pop();
+	  for (int i = low; i <= high; i++) {
+	    push(i);
+	    if (execute(sp) != NULL) goto error;
+	  }
+	}
+	continue;
+      case 'w': // block( -- flag) -- | execute block while
+	sp = (const char*) pop();
+	do {
+	  if (execute(sp) != NULL) goto error;
+	} while (pop());
+	continue;
+      case 'x': // script -- | execute script
+	sp = (const char*) pop();
+	if (execute(sp) != NULL) goto error;
+	continue;
+      case 'y': // -- | yield
+	yield();
+	continue;
+      /*
+       * Script operations.
+       */
+      case '`': // -- addr | lookup or add variable
+	{
+	  char name[NAME_MAX];
+	  size_t len = 0;
+	  while (((op = next(ip++)) != 0) && isalnum(op))
+	    name[len++] = op;
+	  name[len] = 0;
+	  if (len > 0) {
+	    int i = lookup(name, len);
+	    if (i != -1 && m_trace) {
+	      m_ios.print(name);
+	      m_ios.print(':');
+	      print();
+	    }
+	    push(i);
+	  }
+	}
+	ip = ip - 1;
+	continue;
+      case ':': // addr -- | execute function (variable)
+	addr = pop();
+	sp = (const char*) read(addr);
+	if (sp == NULL) goto error;
+	if (execute(sp) != NULL) goto error;
+	continue;
       case ';': // addr block -- | copy block to variable
 	{
 	  const char* dest = m_eeprom.as_addr(m_dp);
@@ -748,37 +674,13 @@ public:
 	  }
 	}
 	continue;
-      case '`': // -- addr | lookup or add variable
-	{
-	  char name[NAME_MAX];
-	  size_t len = 0;
-	  while (((op = read(ip++)) != 0) && isalnum(op))
-	    name[len++] = op;
-	  name[len] = 0;
-	  if (len > 0) {
-	    int i = lookup(name, len);
-	    if (i != -1 && m_trace) {
-	      m_ios.print(name);
-	      m_ios.print(':');
-	      print();
-	    }
-	    push(i);
-	  }
-	}
-	ip = ip - 1;
-	continue;
-      case '\'': // -- char | push character
-	op = read(ip);
-	if (op != 0) {
-	  push(op);
-	  ip += 1;
-	}
-	continue;
       case '{': // -- block | start code block
 	left = '{';
 	right = '}';
 	push(mem->as_addr(ip));
 	break;
+      case '}': // -- | end of block
+	return (NULL);
       case '(': // -- | start output string
 	left = '(';
 	right = ')';
@@ -795,14 +697,108 @@ public:
 	  m_marker = -1;
 	  continue;
 	}
+      case '\'': // -- char | push character
+	op = next(ip);
+	if (op != 0) {
+	  push(op);
+	  ip += 1;
+	}
+	continue;
+      /*
+       * Arduino operations.
+       */
+      case 'A': // pin -- sample | analogRead(pin)
+	pin = tos();
+	tos(analogRead(pin));
+	continue;
+      case 'C': // xn..x1 -- | clear
+	clear();
+	continue;
+      case 'D': // ms -- | delay()
+	w = pop();
+	delay((unsigned) w);
+	continue;
+      case 'E': // period addr -- bool | time-out
+	addr = pop();
+	w = read(addr);
+	n = tos();
+	if ((((unsigned) millis() & 0xffff) - ((unsigned) w)) >= ((unsigned) n)) {
+	  tos(-1);
+	  write(addr, millis());
+	}
+	else tos(0);
+	continue;
+      case 'H': // pin -- | digitalWrite(pin, HIGH)
+	pin = pop();
+	digitalWrite(pin, HIGH);
+	continue;
+      case 'I': // pin -- | pinMode(pin, INPUT)
+	pin = pop();
+	pinMode(pin, INPUT);
+	continue;
+      case 'K': // -- [char true] or false | non-blocking read from input stream
+	w = m_ios.read();
+	if (w < 0) {
+	  push(0);
+	} else {
+	  push(w);
+	  push(-1);
+	}
+	continue;
+      case 'L': // pin -- | digitalWrite(pin, LOW)
+	pin = pop();
+	digitalWrite(pin, LOW);
+	continue;
+      case 'M': // -- ms | millis()
+	push(millis());
+	continue;
+      case 'N': // -- | no operation
+	continue;
+      case 'O': // pin -- | pinMode(pin, OUTPUT)
+	pin = pop();
+	pinMode(pin, OUTPUT);
+	continue;
+      case 'P': // value pin -- | analogWrite(pin, value)
+	pin = pop();
+	w = pop();
+	analogWrite(pin, w);
+	continue;
+      case 'R': // pin -- bool | digitalRead(pin)
+	pin = tos();
+	tos(as_bool(digitalRead(pin)));
+	continue;
+      case 'S': // -- | print stack contents
+	print();
+	continue;
+      case 'U': // pin -- | pinMode(pin, INPUT_PULLUP)
+	pin = pop();
+	pinMode(pin, INPUT_PULLUP);
+	continue;
+      case 'W': // value pin -- | digitalWrite(pin, value)
+	pin = pop();
+	w = pop();
+	digitalWrite(pin, w);
+	continue;
+      case 'X': // pin -- | digitalToggle(pin)
+	pin = pop();
+	digitalWrite(pin, !digitalRead(pin));
+	continue;
+      case 'Z': // -- | toggle trace mode
+	m_trace = !m_trace;
+	continue;
+      case TRAP_OP_CODE:
+	sp = trap(ip);
+	if (sp == NULL) goto error;
+	ip = sp;
+	continue;
       default:
-	;
+	goto error;
       }
 
       // Parse special parenphesis forms (allow nesting)
       if (left) {
 	int n = 1;
-	while ((n != 0) && ((op = read(ip++)) != 0)) {
+	while ((n != 0) && ((op = next(ip++)) != 0)) {
 	  if (op == left) n++;
 	  else if (op == right) n--;
 	  if (left == '(' && n > 0) m_ios.print(op);
@@ -816,21 +812,6 @@ public:
 	  op = left;
 	  break;
 	}
-	continue;
-      }
-
-      // Execute operation code
-      if (execute(op)) continue;
-
-      // Check for trap operation code
-      if (op == TRAP_OP_CODE) {
-	const char* np = trap(ip);
-	if (np == NULL) break;
-	ip = np;
-      }
-      else {
-	ip = ip - 1;
-	break;
       }
     }
 
@@ -841,6 +822,8 @@ public:
     if (op == 0 || op == '}') return (NULL);
 
     // Check for trace mode and error print
+  error:
+    ip = ip - 1;
     if (m_trace && mem == &m_memory) {
       m_ios.print(script);
       if (script[strlen(script) - 1] != '\n') m_ios.println();
@@ -877,13 +860,18 @@ public:
   }
 
 protected:
-  typedef char (*read_fn)(const char*);
-
   /** Max length of name. */
   static const size_t NAME_MAX = 16;
 
   /** Trap operation code prefix. */
   static const char TRAP_OP_CODE = '_';
+
+  /**
+   * Return next token from given source.
+   * @param[in] src source pointer.
+   * @return next token.
+   */
+  typedef char (*next_fn)(const char* src);
 
   /** Dictionary entry (in eeprom). */
   struct dict_t {
@@ -1029,9 +1017,9 @@ protected:
      * Return read function for memory.
      * @return read function.
      */
-    virtual read_fn get_read_fn()
+    virtual next_fn get_next_fn()
     {
-      return (read);
+      return (next);
     }
 
     /**
@@ -1039,7 +1027,7 @@ protected:
      * @param src local address.
      * @return byte.
      */
-    static char read(const char* src)
+    static char next(const char* src)
     {
       return (*src);
     };
@@ -1080,9 +1068,9 @@ protected:
      * Return read function for program memory.
      * @return read function.
      */
-    virtual read_fn get_read_fn()
+    virtual next_fn get_next_fn()
     {
-      return (read);
+      return (next);
     }
 
     /**
@@ -1090,7 +1078,7 @@ protected:
      * @param src local address.
      * @return byte.
      */
-    static char read(const char* src)
+    static char next(const char* src)
     {
       return (pgm_read_byte(src));
     };
@@ -1131,9 +1119,9 @@ protected:
      * Return read function for eeprom.
      * @return read function.
      */
-    virtual read_fn get_read_fn()
+    virtual next_fn get_next_fn()
     {
-      return (read);
+      return (next);
     }
 
     /**
@@ -1141,7 +1129,7 @@ protected:
      * @param src local address.
      * @return byte.
      */
-    static char read(const char* src)
+    static char next(const char* src)
     {
       return (eeprom_read_byte((const uint8_t*) src));
     };
