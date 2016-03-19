@@ -94,7 +94,6 @@ Opcode | Parameters | Description | Forth
 . | x -- | print number followed by one space | .
 ? | addr -- | print variable | ?
 ; | addr block -- | copy block and assign variable (function) |
-: | addr -- | execute variable (function) |
 \ | x1..xn n -- x1..xn | n > 0: mark stack frame with n-elements |
 \ | x1..xn y1..ym n -- y1..ym | n < 0: remove stack frame with n-elements |
 $ | n -- addr | address of n-element in frame |
