@@ -22,11 +22,44 @@
 
 #include <Shell.h>
 
-Shell<> shell(Serial);
-
 const int BUF_MAX = 64;
 char buf[BUF_MAX];
 char* bp = buf;
+
+// List words in dictionary
+// : words ( -- )
+//   0
+//   { dup 1+ swap .name
+//     over 8 mod 0= { cr } if
+//   } while
+//   8 mod 0<> { cr } if ;
+SCRIPT(words, "0{u1+sto8%0={m}i}w8%0#{m}i");
+
+// Iterative factorial function
+// : fac ( n -- n! ) 1 2 rot { * } loop ;
+SCRIPT(fac, "1,2r{*}l");
+
+// Blink given pin, given number of times
+// : blinks ( n ms pin -- )
+//   dup output
+//   rot 1 swap { drop dup high over delay dup low over delay } loop
+//   drop drop ;
+SCRIPT(blinks, "uOr1s{duHoDuLoD}ldd");
+
+const script_t scripts[] PROGMEM = {
+  SCRIPT_ENTRY(words),
+  SCRIPT_ENTRY(fac),
+  SCRIPT_ENTRY(blinks),
+  { NULL, NULL }
+};
+
+// #define USE_SHORT_OP_NAMES
+
+#if defined(USE_SHORT_OP_NAMES)
+Shell<16,32,false> shell(Serial, scripts);
+#else
+Shell<16,32> shell(Serial, scripts);
+#endif
 
 void setup()
 {
@@ -34,32 +67,12 @@ void setup()
   while (!Serial);
   Serial.println(F("ShellDemo: started, use [Newline] mode"));
 
-  // Program memory script: list words in dictionary
-  // : words ( -- )
-  //   0
-  //   { dup 1+ swap .name
-  //     over 8 mod 0= { cr } if
-  //   } while
-  //   8 mod 0<> { cr } if ;
-  shell.set(F("words"), SCRIPT("0{u1+sto8%0={m}i}w8%0#{m}i"));
-
-  // Program memory script: iterative factorial function
-  // : fac ( n -- n! ) 1 2 rot { * } loop ;
-  shell.set(F("fac"), SCRIPT("1,2r{*}l"));
-
-  // Program memory script: blink given pin, given number of times
-  // : blinks ( n ms pin -- )
-  //   dup output
-  //   rot 1 swap { drop dup high over delay dup low over delay } loop
-  //   drop drop ;
-  shell.set(F("blinks"), SCRIPT("uOr1s{duHoDuLoD}ldd"));
-
-  // EEPROM script: blink led 10 times with 1000 ms
+  // Define a script in EEPROM
   // : demo ( -- ) 10 1000 13 blinks ;
-  shell.execute("`demo{10,1000,13`blinks:};");
+  shell.execute(":demo{10,1000,13`blinks};");
 
   // Execute program memory script: list words
-  shell.execute(SCRIPT("`words:"));
+  shell.execute(F("`words"));
   shell.trace(true);
 }
 

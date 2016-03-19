@@ -39,10 +39,10 @@ void setup()
   //      pin low ms delay
   //      true
   //   } while ;
-  shell.set(F("blink"), SCRIPT("2\\2$@O{2$@H1$@D2$@L1$@DT}w"));
+  shell.set(F("blink"), F("2\\2$@O{2$@H1$@D2$@L1$@DT}w"));
 
   // 1000 13 blink
-  shell.execute(SCRIPT("1000,13`blink:"));
+  shell.execute(F("1000,13`blink"));
 }
 
 void loop()

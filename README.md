@@ -193,20 +193,20 @@ Quote (apostrophe) a character to push it on the parameter stack.
 
 ### Variables
 
-Variables are defined with `` `name ``. The operator will push the
+Variables are defined with `:name`. The operator will push the
 address of the variable on the parameter stack. It may be accessed
 using the operators fetch `@` and store `!`.
 ```
- 42`x!
- `x@
+ 42:x!
+ :x@
 ```
 The operator `?` can be used to print the value of a variable.
 ```
- `x?
+ :x?
 ```
 It is short hand for:
 ```
- `x@.
+ :x@.
 ```
 
 ### Blocks
@@ -220,16 +220,16 @@ stack. The block can be executed with the instruction _x_.
 The operation `;` will copy a block to the heap and assign a
 variable. Used in the form:
 ```
- `fun { code-block };
- `fun@x
+ :fun { code-block };
+ :fun@x
 ```
-The short hand for executing a function is `:`.
+The short hand for executing a function is `` `name ``.
 ```
- `fun:
+ `fun
 ```
-The instruction _f_ may be used to free the code block.
+The instruction _f_ may be used to forget variables.
 ```
- `fun@f
+ :fun,f
 ```
 
 ### Control Structures
@@ -277,7 +277,7 @@ fetch `@` and store `!`.
 
 Swap could be defined as:
 ```
- `swap {2\2$@1$@-2\};
+ :swap {2\2$@1$@-2\};
 ```
 which will mark a frame with two arguments, copy the second and then
 the first argument, and last remove the frame, leaving the two return
@@ -419,10 +419,10 @@ Check that a given parameter is within a range low to high.
 ```
 Script:
 ```
- `within{rsos>sr<|~};
-  10,5,100`within:.
- -10,5,100`within:.
- 110,5,100`within:.
+ :within{rsos>sr<|~};
+  10,5,100`within.
+ -10,5,100`within.
+ 110,5,100`within.
 ```
 
 ### Range check function with stack frame
@@ -439,10 +439,10 @@ stack frame for the three parameters.
 ```
 Script:
 ```
- `within{3\1$@3$@>1$@2$@<|~-3\};
-  10,5,100`within:.
- -10,5,100`within:.
- 110,5,100`within:.
+ :within{3\1$@3$@>1$@2$@<|~-3\};
+  10,5,100`within.
+ -10,5,100`within.
+ 110,5,100`within.
 ```
 
 ### Iterative Factorial (while)
@@ -462,8 +462,8 @@ Calculate factorial number of given parameter.
 ```
 Script:
 ```
- `fac{1s{u0>{so*s1-T}{dF}e}w};
- 5`fac:.
+ :fac{1s{u0>{so*s1-T}{dF}e}w};
+ 5`fac.
 ```
 
 ### Iterative Factorial (loop)
@@ -477,8 +477,8 @@ Calculate factorial number of given parameter.
 ```
 Script:
 ```
- `fac{1,2r{*}l};
- 5`fac:.
+ :fac{1,2r{*}l};
+ 5`fac.
 ```
 
 ### Recursive Factorial
@@ -495,8 +495,8 @@ Calculate factorial number of given parameter.
 ```
 Script:
 ```
- `fac{u0>{u1-`fac:*}{d1}e};
- 5`fac:.
+ :fac{u0>{u1-`fac:*}{d1}e};
+ 5`fac.
 ```
 
 ### Stack vector sum

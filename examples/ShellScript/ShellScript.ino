@@ -22,40 +22,41 @@
 
 #include <Shell.h>
 
-// Shell 16 depth stack and 16 variables
-Shell<16,16> shell(Serial);
+// : blinks ( n ms pin -- )
+//   dup output
+//   rot 1 swap { drop dup high over delay dup low over delay } loop
+//   drop drop ;
+SCRIPT(blinks, "uOr1s{duHoDuLoD}ldd");
+
+// : monitor ( buttonPin ledPin -- )
+//   over inputPullup
+//   dup output
+//   {
+//      over digitalRead
+//      { 1000 } { 200 } ifElse
+//      over high dup delay over low delay
+//      true
+//   } while ;
+SCRIPT(monitor, "oUuO{oR{1000}{200}eoHuDoLDT}w");
+
+// Script table
+const script_t scripts[] PROGMEM = {
+  SCRIPT_ENTRY(blinks),
+  SCRIPT_ENTRY(monitor),
+  { NULL, NULL }
+};
+
+// Shell 16 depth stack and 16 variables, and application script table
+Shell<16,16> shell(Serial, scripts);
 
 void setup()
 {
   Serial.begin(57600);
   while (!Serial);
   Serial.println(F("ShellScript: started"));
-
-  // Trace shell commands
   shell.trace(true);
-
-  // : blinks ( n ms pin -- )
-  //   dup output
-  //   rot 1 swap { drop dup high over delay dup low over delay } loop
-  //   drop drop ;
-  shell.set(F("blinks"), SCRIPT("uOr1s{duHoDuLoD}ldd"));
-
-  // 5 1000 13 blinks
-  shell.execute(SCRIPT("5,1000,13`blinks:"));
-
-  // : monitor ( buttonPin ledPin -- )
-  //   over inputPullup
-  //   dup output
-  //   {
-  //      over digitalRead
-  //      { 1000 } { 200 } ifElse
-  //      over high dup delay over low delay
-  //      true
-  //   } while ;
-  shell.set(F("monitor"), SCRIPT("oUuO{oR{1000}{200}eoHuDoLDT}w"));
-
-  // 2 13 monitor
-  shell.execute(SCRIPT("2,13`monitor:"));
+  shell.execute(F("5,1000,13`blinks"));
+  shell.execute(F("2,13`monitor"));
 }
 
 void loop()

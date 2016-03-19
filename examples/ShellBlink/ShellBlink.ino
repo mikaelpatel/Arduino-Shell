@@ -40,10 +40,10 @@ void setup()
   //      dup low over delay
   //      true
   //    } while ;
-  shell.set(F("blink"), SCRIPT("uO{uHoDuLoDT}w"));
+  shell.set(F("blink"), F("uO{uHoDuLoDT}w"));
 
   // 1000 13 blink
-  shell.execute(SCRIPT("1000,13`blink:"));
+  shell.execute(F("1000,13`blink"));
 }
 
 void loop()

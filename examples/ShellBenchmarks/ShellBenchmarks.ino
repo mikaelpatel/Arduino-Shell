@@ -35,7 +35,7 @@ Shell<16,16> shell(Serial);
     uint32_t start0 = micros();				\
     uint32_t start;					\
     while ((start = micros()) == start0);		\
-    shell.execute(SCRIPT(script));			\
+    shell.execute(F(script));				\
     uint32_t stop = micros();				\
     us = stop - start - baseline;			\
     Serial.print(F(script));				\
@@ -107,6 +107,7 @@ void setup()
   BENCHMARK("10{1-q}w");
   BENCHMARK("100{1-q}w");
   BENCHMARK("1000{1-q}w");
+  BENCHMARK("10000{1-q}w");
 
   BENCHMARK("1,0{}l");
   BENCHMARK("1,1{}l");
@@ -114,6 +115,7 @@ void setup()
   BENCHMARK("1,10{d}l");
   BENCHMARK("1,100{d}l");
   BENCHMARK("1,1000{d}l");
+  BENCHMARK("1,10000{d}l");
 
   BENCHMARK("1D");
   BENCHMARK("10D");
@@ -140,35 +142,36 @@ void setup()
 
   BENCHMARK("0f");
 
-  shell.set(F("abs"), SCRIPT("u0<{n}i"));
-  shell.set(F("min"), SCRIPT("oo>{s}id"));
-  shell.set(F("max"), SCRIPT("oo<{s}id"));
-  shell.set(F("fac"), SCRIPT("1,2r{*}l"));
-  shell.set(F("5fac"), SCRIPT("5`fac:"));
+  shell.set(F("abs"), F("u0<{n}i"));
+  shell.set(F("min"), F("oo>{s}id"));
+  shell.set(F("max"), F("oo<{s}id"));
+  shell.set(F("fac"), F("1,2r{*}l"));
+  shell.set(F("fac5"), F("5`fac"));
   shell.set(F("x"), 0);
   shell.set(F("y"), 0);
   eeprom_busy_wait();
 
-  BENCHMARK("`abs");
-  BENCHMARK("`min");
-  BENCHMARK("`max");
-  BENCHMARK("`fac");
-  BENCHMARK("`5fac");
-  BENCHMARK("`x");
-  BENCHMARK("`y");
+  BENCHMARK(":abs");
+  BENCHMARK(":min");
+  BENCHMARK(":max");
+  BENCHMARK(":fac");
+  BENCHMARK(":fac5");
+  BENCHMARK(":x");
+  BENCHMARK(":y");
   BENCHMARK("C");
 
-  BENCHMARK("-10`abs@x");
-  BENCHMARK("-10`abs:");
-  BENCHMARK("-10,10`min:");
-  BENCHMARK("-10,10`max:");
-  BENCHMARK("5`fac:");
-  BENCHMARK("`5fac:");
+  BENCHMARK("-10:abs@x");
+  BENCHMARK("-10`abs");
+  BENCHMARK("-10,10`min");
+  BENCHMARK("-10,10`max");
+  BENCHMARK("5`fac");
+  BENCHMARK("`fac5");
+  BENCHMARK("C");
 
-  BENCHMARK("`x@");
-  BENCHMARK("`y!");
-  BENCHMARK("`x,u@1+s!");
-  BENCHMARK("`x@`y!");
+  BENCHMARK(":x@");
+  BENCHMARK(":y!");
+  BENCHMARK(":x,u@1+s!");
+  BENCHMARK(":x@:y!");
 }
 
 void loop()

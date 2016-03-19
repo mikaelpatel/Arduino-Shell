@@ -1,6 +1,6 @@
 /**
  * @file Shell.h
- * @version 1.0
+ * @version 2.0
  *
  * @section License
  * Copyright (C) 2016, Mikael Patel
@@ -19,14 +19,29 @@
 #ifndef SHELL_H
 #define SHELL_H
 
-/** Script strings in program memory */
-class Script;
+/**
+ * Application script dictionary entry (in program memory).
+ */
+struct script_t {
+  const char* name;		//!< Script name (in program memory).
+  const char* script;		//!< Script code (in program memory).
+};
 
 /**
- * Create a shell script with given string in program memory.
- * @param[in] s script string.
+ * Create script name and script strings in program memory.
+ * @param[in] name identifier.
+ * @param[in] script string.
  */
-#define SCRIPT(s) ((const Script*) PSTR(s))
+#define SCRIPT(name,script)				\
+  const char name ## _name[] PROGMEM = #name;		\
+  const char name ## _script[] PROGMEM = script		\
+
+/**
+ * Create script entry in script table in program memory.
+ * @param[in] name identifier.
+ */
+#define SCRIPT_ENTRY(name)				\
+  { name ## _name, name ## _script }
 
 /**
  * Script Shell with stack machine instruction set. Instructions are
@@ -42,8 +57,10 @@ public:
   /**
    * Construct a shell with given stream.
    * @param[in] ios input output stream.
+   * @param[in] scripts null terminated vector of application scripts.
    */
-  Shell(Stream& ios) :
+  Shell(Stream& ios, const script_t* scripts = NULL) :
+    m_scripts(scripts),
     m_dp((char*) sizeof(m_dp) + sizeof(m_entries) + (sizeof(dict_t) * VAR_MAX)),
     m_dict((dict_t*) sizeof(m_dp) + sizeof(m_entries)),
     m_entries(0),
@@ -196,8 +213,8 @@ public:
    */
   int read(int addr) const
   {
-    if (addr < 0 || addr >= (VAR_MAX + STACK_MAX)) return (0);
-    return (m_var[addr]);
+    if (addr >= 0 && addr < (VAR_MAX + STACK_MAX)) return (m_var[addr]);
+    return (-pgm_read_word(&m_scripts[addr - 0x4000].script));
   }
 
   /**
@@ -231,7 +248,7 @@ public:
   {
     char name[NAME_MAX];
     strcpy_P(name, (const char*) var);
-    int i = lookup(name, strlen(name));
+    int i = lookup(name, strlen(name), true);
     if (i < 0) return (i);
     m_var[i] = value;
     return (i);
@@ -254,7 +271,7 @@ public:
    * @param[in] script in program memory.
    * @return index or negative error code.
    */
-  int set(const __FlashStringHelper* var, const Script* script)
+  int set(const __FlashStringHelper* var, const __FlashStringHelper* script)
   {
     return (set(var, (int) m_progmem.as_addr((const char*) script)));
   }
@@ -348,7 +365,7 @@ public:
 	m_ios.print(++m_cycle);
 	m_ios.print(':');
 	m_ios.print(mem->prefix());
-	m_ios.print(':');
+	m_ios.print('/');
 	m_ios.print((int) ip - 1);
 	m_ios.print(':');
 	const class __FlashStringHelper* str = as_fstr(op);
@@ -356,7 +373,7 @@ public:
 	  m_ios.print(op);
 	else
 	  m_ios.print(str);
-	if (op != '`') {
+	if (op != '`' && op != ':') {
 	  m_ios.print(':');
 	  print();
 	}
@@ -633,30 +650,48 @@ public:
       /*
        * Script operations.
        */
-      case '`': // -- addr | lookup or add variable
+      case ':': // -- addr | lookup and append variable/function
+      case '`': // -- | lookup and execute function
 	{
 	  char name[NAME_MAX];
 	  size_t len = 0;
-	  while (((op = next(ip++)) != 0) && isalnum(op))
+	  bool flag = (op == ':');
+
+	  // Scan variable/function name
+	  op = next(ip);
+	  if (!isalpha(op)) goto error;
+	  name[len++] = op;
+	  while (((op = next(++ip)) != 0) && isalnum(op))
 	    name[len++] = op;
 	  name[len] = 0;
-	  if (len > 0) {
-	    int i = lookup(name, len);
-	    if (i != -1 && m_trace) {
-	      m_ios.print(name);
-	      m_ios.print(':');
-	      print();
-	    }
-	    push(i);
+	  if (m_trace) {
+	    m_ios.print(name);
+	    m_ios.print(':');
+	    print();
+	  }
+	  if (len == 0) goto error;
+
+	  // Lookup in dictionaries with append flag
+	  int i = lookup(name, len, flag);
+	  if (i < 0) goto error;
+
+	  // Push address on colon and execute on quote
+	  if (flag) {
+	    if (i < VAR_MAX)
+	      push(i);
+	    else push((i - VAR_MAX) + 0x4000);
+	  }
+	  else if (i < VAR_MAX) {
+	    sp = (const char*) read(i);
+	    if (sp == NULL) goto error;
+	    if (execute(sp) != NULL) goto error;
+	  }
+	  else {
+	    i = i - VAR_MAX;
+	    sp = (const char*) pgm_read_word(&m_scripts[i].script);
+	    if (execute(m_progmem.as_addr(sp)) != NULL) goto error;
 	  }
 	}
-	ip = ip - 1;
-	continue;
-      case ':': // addr -- | execute function (variable)
-	addr = pop();
-	sp = (const char*) read(addr);
-	if (sp == NULL) goto error;
-	if (execute(sp) != NULL) goto error;
 	continue;
       case ';': // addr block -- | copy block to variable
 	{
@@ -795,7 +830,7 @@ public:
 	goto error;
       }
 
-      // Parse special parenphesis forms (allow nesting)
+      // Parse special forms (allow nesting)
       if (left) {
 	int n = 1;
 	while ((n != 0) && ((op = next(ip++)) != 0)) {
@@ -843,7 +878,7 @@ public:
    * @param[in] script program memory based script.
    * @return script reference or NULL.
    */
-  const char* execute(const Script* script)
+  const char* execute(const __FlashStringHelper* script)
   {
     return (execute(m_progmem.as_addr((const char*) script)));
   }
@@ -879,6 +914,7 @@ protected:
     int value;			//!< Value persistent.
   };
 
+  const script_t* m_scripts;	//!< Application scripts (in progmem).
   char* m_dp;			//!< Dictionary pointer (in eeprom).
   dict_t* m_dict;		//!< Dictionary (in eeprom).
   uint8_t m_entries;		//!< Dictionary entries.
@@ -990,7 +1026,8 @@ protected:
      */
     virtual const __FlashStringHelper* prefix()
     {
-      return (F("RAM"));
+      if (FULL_OP_NAMES) return (F("RAM"));
+      return (F("D"));
     }
 
     /**
@@ -1041,7 +1078,8 @@ protected:
      */
     virtual const __FlashStringHelper* prefix()
     {
-      return (F("PGM"));
+      if (FULL_OP_NAMES) return (F("PROGMEM"));
+      return (F("P"));
     }
 
     /**
@@ -1092,7 +1130,8 @@ protected:
      */
     virtual const __FlashStringHelper* prefix()
     {
-      return (F("EEM"));
+      if (FULL_OP_NAMES) return (F("EEPROM"));
+      return (F("E"));
     }
 
     /**
@@ -1155,9 +1194,10 @@ protected:
    * error code.
    * @param[in] name string.
    * @param[in] len length of string.
+   * @param[in] flag append.
    * @return entry index or negative error code.
    */
-  int lookup(const char* name, size_t len)
+  int lookup(const char* name, size_t len, bool flag)
   {
     int i = 0;
 
@@ -1173,8 +1213,20 @@ protected:
 	return (i);
     }
 
+    // Lookup entry in application dictionary
+    if (m_scripts != NULL && !flag) {
+      i = 0;
+      while (1) {
+	const char* np = (const char*) pgm_read_word(&m_scripts[i].name);
+	if (np == NULL) break;
+	if (!strcmp_P(name, np)) return (VAR_MAX + i);
+	i += 1;
+      }
+    }
+
     // Check if dictionary is full
-    if (i == VAR_MAX) return (-1);
+    if (m_entries == VAR_MAX || !flag) return (-1);
+    i = m_entries;
 
     // Add entry to dictionary
     eeprom_update_block(&m_dp, &m_dict[i].name, sizeof(m_dp));

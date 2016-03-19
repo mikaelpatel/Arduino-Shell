@@ -34,8 +34,7 @@ void setup()
   //   0 4 { analogRead . } loop cr
   //   100 delay true
   // } while
-
-  shell.execute(SCRIPT("{0,4{A.}lm100DT}w"));
+  shell.execute(F("{0,4{A.}lm100DT}w"));
 }
 
 void loop()
