@@ -216,7 +216,7 @@ stack. The block can be executed with the instruction _x_.
 ```
  { code-block } x
 ```
-The operation `;` will copy a block to the heap and assign a
+The operation `;` will copy a block to the eeprom and assign a
 variable. Used in the form:
 ```
  :fun { code-block };
@@ -226,7 +226,8 @@ The short hand for executing a function is `` `name ``.
 ```
  `fun
 ```
-The instruction _f_ may be used to forget variables.
+The instruction _f_ may be used to forget variable(s). The eeprom
+allocation point is reset accordingly.
 ```
  :fun,f
 ```
