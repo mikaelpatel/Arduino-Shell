@@ -1220,10 +1220,9 @@ protected:
 
     // Lookup entry in application dictionary
     if (m_scripts != NULL && !flag) {
+      const char* np;
       i = 0;
-      while (1) {
-	const char* np = (const char*) pgm_read_word(&m_scripts[i].name);
-	if (np == NULL) break;
+      while ((np = (const char*) pgm_read_word(&m_scripts[i].name)) != NULL) {
 	if (!strcmp_P(name, np)) return (VAR_MAX + i);
 	i += 1;
       }

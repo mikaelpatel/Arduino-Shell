@@ -32,8 +32,8 @@ Shell<16,16> shell(Serial);
 
 #define BENCHMARK(script)				\
   do {							\
-    uint32_t start0 = micros();				\
     uint32_t start;					\
+    uint32_t start0 = micros();				\
     while ((start = micros()) == start0);		\
     shell.execute(F(script));				\
     uint32_t stop = micros();				\
@@ -172,6 +172,14 @@ void setup()
   BENCHMARK(":y!");
   BENCHMARK(":x,u@1+s!");
   BENCHMARK(":x@:y!");
+  BENCHMARK("C");
+
+  BENCHMARK("0f");
+  shell.set(F("fib"), F("u1>{u1-`fib,s2-`fib+}i"));
+  eeprom_busy_wait();
+
+  BENCHMARK(":fib");
+  BENCHMARK("10`fib");
 }
 
 void loop()
