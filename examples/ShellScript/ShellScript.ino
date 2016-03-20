@@ -43,7 +43,7 @@ SCRIPT(monitor, "oUuO{oR{1000}{200}eoHuDoLDT}w");
 const script_t scripts[] PROGMEM = {
   SCRIPT_ENTRY(blinks),
   SCRIPT_ENTRY(monitor),
-  { NULL, NULL }
+  SCRIPT_NULL()
 };
 
 // Shell 16 depth stack and 16 variables, and application script table

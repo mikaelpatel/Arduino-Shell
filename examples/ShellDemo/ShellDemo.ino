@@ -50,7 +50,7 @@ const script_t scripts[] PROGMEM = {
   SCRIPT_ENTRY(words),
   SCRIPT_ENTRY(fac),
   SCRIPT_ENTRY(blinks),
-  { NULL, NULL }
+  SCRIPT_NULL()
 };
 
 // #define USE_SHORT_OP_NAMES

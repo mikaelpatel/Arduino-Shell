@@ -44,6 +44,11 @@ struct script_t {
   { name ## _name, name ## _script }
 
 /**
+ * Create last entry in script table in program memory.
+ */
+#define SCRIPT_NULL() { NULL, NULL }
+
+/**
  * Script Shell with stack machine instruction set. Instructions are
  * printable characters so that command lines and scripts can be
  * written directly.
