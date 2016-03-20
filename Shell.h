@@ -282,6 +282,47 @@ public:
   }
 
   /**
+   * List dictionaries; eeprom and progmem.
+   */
+  void words()
+  {
+    const char* np;
+    char c;
+    int i = 0;
+
+    // List scripts in eeprom dicionary (dynamic)
+    m_ios.print(m_eeprom.prefix());
+    m_ios.print(F(": "));
+    for (; i < m_entries; i++) {
+      np = (const char*) eeprom_read_word((const uint16_t*) &m_dict[i].name);
+      while ((c = (char) eeprom_read_byte((const uint8_t*) np++)) != 0)
+	m_ios.print(c);
+      m_ios.print(' ');
+      i += 1;
+      if ((i % 8) == 0) {
+	m_ios.println();
+	i = 0;
+      }
+    }
+    if (i != 0) m_ios.println();
+
+    // List scripts in program memory dicionary (static)
+    m_ios.print(m_progmem.prefix());
+    m_ios.print(F(": "));
+    i = 0;
+    while ((np = (const char*) pgm_read_word(&m_scripts[i].name)) != NULL) {
+      m_ios.print((const __FlashStringHelper*) np);
+      m_ios.print(' ');
+      i += 1;
+      if ((i % 8) == 0) {
+	m_ios.println();
+	i = 0;
+      }
+    }
+    if (i != 0) m_ios.println();
+  }
+
+  /**
    * Non-blocking read next character from shell stream. If available
    * add to buffer. If newline was read the buffer is null-terminated
    * and true is returned, otherwise false.
@@ -823,6 +864,9 @@ public:
 	pin = pop();
 	digitalWrite(pin, !digitalRead(pin));
 	continue;
+      case 'Y': // -- | words
+	words();
+	continue;
       case 'Z': // -- | toggle trace mode
 	m_trace = !m_trace;
 	continue;
@@ -992,6 +1036,7 @@ protected:
     case 'v': return (F("emit"));
     case 'w': return (F("while"));
     case 'x': return (F("execute"));
+    case 'y': return (F("yield"));
     case 'z': return (F("zap"));
     case 'A': return (F("analogRead"));
     case 'C': return (F("clear"));
@@ -1012,7 +1057,7 @@ protected:
     case 'U': return (F("inputPullup"));
     case 'W': return (F("digitalWrite"));
     case 'X': return (F("digitalToggle"));
-    case 'Y': return (F("yield"));
+    case 'Y': return (F("words"));
     case 'Z': return (F("toggleTraceMode"));
     default:
       return (NULL);
@@ -1031,7 +1076,7 @@ protected:
      */
     virtual const __FlashStringHelper* prefix()
     {
-      if (FULL_OP_NAMES) return (F("RAM"));
+      if (FULL_OP_NAMES) return (F("SRAM"));
       return (F("D"));
     }
 

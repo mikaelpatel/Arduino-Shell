@@ -142,6 +142,7 @@ T | -- true | true | TRUE
 U | pin -- | pinMode(pin, INPUT_PULLUP) |
 W | value pin -- | digitalWrite(pin, value) |
 X | pin -- | digitalToggle(pin)  |
+Y | -- | list dictionaries | WORDS
 Z | -- | toggle trace mode |
 
 ## Special forms
