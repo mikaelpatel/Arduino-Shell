@@ -338,7 +338,7 @@ instruction.
 ```
 Script:
 ```
- 13O{1000`timer,E{13X}iT}w
+ 13O{1000:timer,E{13X}iT}w
 ```
 
 ### Blink controlled by on/off button
@@ -376,13 +376,8 @@ Script:
 Read analog pins (0..4) and print value continuously with 100 ms delay.
 ```
  {
-   0 4
-   {
-     analogRead .
-   } loop
-   cr
-   100 delay
-   true
+   0 4 { analogRead . } loop
+   cr 100 delay true
  } while
 ```
 Script:
@@ -496,7 +491,7 @@ Calculate factorial number of given parameter.
 ```
 Script:
 ```
- :fac{u0>{u1-`fac:*}{d1}e};
+ :fac{u0>{u1-`fac*}{d1}e};
  5`fac.
 ```
 

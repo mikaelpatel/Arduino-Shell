@@ -288,7 +288,7 @@ public:
   {
     const char* np;
     char c;
-    int i = 0;
+    uint8_t i = 0;
 
     // List scripts in eeprom dicionary (dynamic)
     m_ios.print(m_eeprom.prefix());
@@ -298,13 +298,8 @@ public:
       while ((c = (char) eeprom_read_byte((const uint8_t*) np++)) != 0)
 	m_ios.print(c);
       m_ios.print(' ');
-      i += 1;
-      if ((i % 8) == 0) {
-	m_ios.println();
-	i = 0;
-      }
     }
-    if (i != 0) m_ios.println();
+    m_ios.println();
 
     // List scripts in program memory dicionary (static)
     m_ios.print(m_progmem.prefix());
@@ -314,12 +309,8 @@ public:
       m_ios.print((const __FlashStringHelper*) np);
       m_ios.print(' ');
       i += 1;
-      if ((i % 8) == 0) {
-	m_ios.println();
-	i = 0;
-      }
     }
-    if (i != 0) m_ios.println();
+    m_ios.println();
   }
 
   /**
