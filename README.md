@@ -57,11 +57,11 @@ And a slightly faster version:
 ```
 Scripts can be defined and executed from both Random Access Memory
 (SRAM), Electrically Erasable Programmable Read-Only Memory (EEPROM),
-and Program Memory (PROGMEM). The supporting data type `Script` and
-macro for string literals `SCRIPT` can be used to define program
-memory based scripts. All named scripts are persistent. Variables may
-be written to EEPROM with the operation `z`. They are automatically
-restored at startup together with defined scripts.
+and Program Memory (PROGMEM). The supporting data type `script_t` and
+macro `SCRIPT` can be used to define an application dictionary with
+program memory based scripts. All named scripts are persistent.
+Variables may be written to EEPROM with the operation `z`. They are
+automatically restored at startup together with defined scripts.
 
 ## Install
 
