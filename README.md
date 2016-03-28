@@ -55,6 +55,16 @@ And a slightly faster version:
 
  1000,13uO{ooHDooLDT}w
 ```
+And an even shorter version:
+```
+ 13 output
+ {
+   13 digitalToggle 1000 delay
+   true
+ } while
+
+13O{13X1000DT}w
+```
 Scripts can be defined and executed from both Random Access Memory
 (SRAM), Electrically Erasable Programmable Read-Only Memory (EEPROM),
 and Program Memory (PROGMEM). The supporting data type `script_t` and
