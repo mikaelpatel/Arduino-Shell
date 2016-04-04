@@ -24,7 +24,7 @@
  */
 struct script_t {
   const char* name;		//!< Script name (in program memory).
-  const char* script;		//!< Script code (in program memory).
+  const char* code;		//!< Script code (in program memory).
 };
 
 /**
@@ -32,16 +32,16 @@ struct script_t {
  * @param[in] name identifier.
  * @param[in] script string.
  */
-#define SCRIPT(name,script)				\
+#define SCRIPT(name,code)				\
   const char name ## _name[] PROGMEM = #name;		\
-  const char name ## _script[] PROGMEM = script		\
+  const char name ## _code[] PROGMEM = code		\
 
 /**
  * Create script entry in script table in program memory.
  * @param[in] name identifier.
  */
 #define SCRIPT_ENTRY(name)				\
-  { name ## _name, name ## _script }
+  { name ## _name, name ## _code }
 
 /**
  * Create last entry in script table in program memory.
@@ -219,7 +219,7 @@ public:
   int read(int addr) const
   {
     if (addr >= 0 && addr < (VAR_MAX + STACK_MAX)) return (m_var[addr]);
-    return (-pgm_read_word(&m_scripts[addr - 0x4000].script));
+    return (-pgm_read_word(&m_scripts[addr - 0x4000].code));
   }
 
   /**
@@ -725,7 +725,7 @@ public:
 	  }
 	  else {
 	    i = i - VAR_MAX;
-	    sp = (const char*) pgm_read_word(&m_scripts[i].script);
+	    sp = (const char*) pgm_read_word(&m_scripts[i].code);
 	    if (execute(m_progmem.as_addr(sp)) != NULL) goto error;
 	  }
 	}
@@ -950,7 +950,7 @@ protected:
 
   /** Dictionary entry (in eeprom). */
   struct dict_t {
-    const char* name;		//!< Name string (null terminated).
+    const char* name;		//!< Name string (in eeprom).
     int value;			//!< Value persistent.
   };
 
