@@ -86,15 +86,15 @@ File>Examples menu.
 Opcode | Parameters | Description | Forth
 -------|:-----------|:------------|:-----
 , | -- | no operation |
-+ | x y -- x+y | addition | +
-- | x y -- x-y | subtraction | -
-* | x y -- x*y | multiplication | *
+&#43; | x y -- x+y | addition | +
+&#45; | x y -- x-y | subtraction | -
+&#42; | x y -- x*y | multiplication | *
 / | x y -- x/y | division | /
 % | x y -- x%y | modulo | MOD
-# | x y -- x!=y | not equal |
+&#35; | x y -- x!=y | not equal |
 = | x y -- x==y | equal | =
 < | x y -- x<y | less than | <
-> | x y -- x>y | greater than | >
+&#62; | x y -- x>y | greater than | >
 ~ | x -- ~x | bitwise not | NOT
 & | x y -- x&y | bitwise and | AND
 &#124; | x y -- x&#124;y | bitwise or | OR
@@ -415,7 +415,7 @@ Script:
 ### Range check function
 
 Check that a given parameter is within a range low to high.
-````
+```
  : within ( x low high -- bool )
    rot swap over swap > swap rot < or not ;
 
@@ -435,7 +435,7 @@ Script:
 
 Check that a given parameter is within a range low to high. Use a
 stack frame for the three parameters.
-````
+```
  : within { x low high -- bool }
    x @ high @ > x @ low @ < or not ;
 
